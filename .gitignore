@@ -1,0 +1,4 @@
+testfiles/out_testdir/
+env/
+__pycache__
+.vscode/

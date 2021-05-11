@@ -1,0 +1,81 @@
+#######################################################################         
+###              DD / Propagation in normal modes                  ####
+#######################################################################         
+
+RUN-SECTION                                                                     
+name = allene_nopulse
+propagation     direct = nmodes       ngwp = 16
+g-mctdh
+title =  Ehrenfest
+tfinal = 40.0   tout = 0.1 tpsi= 0.1 
+psi  gridpop   update  steps  auto
+end-run-section                                                                 
+
+INTEGRATOR-SECTION
+#gwp_method=classical
+#dynamic_gwps = normal,tind
+#gwp_method= 
+#VMF
+#rk5/all = 1d-6,minstep 1.0d-8
+#rk5/all 
+#rk5/all  1d-6 
+end-integrator-section
+INITIAL-GEOMETRY-SECTION
+#coo_distrib
+mom_distrib
+nstates = 1    init_state = 1
+#init_basis_dist = shell-diag
+init_basis_dist = shell
+cartesian = angst
+ 6                  0.00000000    0.00000000    0.00000000
+ 6                  0.00000000    0.00000000    1.31119000
+ 6                  0.00000000    0.00000000   -1.31119000
+ 1                  0.35466259    0.85623123    1.87664200
+ 1                 -0.35466259   -0.85623123    1.87664200
+ 1                  0.85623123    0.35466259   -1.87664200
+ 1                 -0.85623123   -0.35466259   -1.87664200
+end-cartesian
+
+nmode
+1A    0.0000 317.5895  ,  cm-1 width = 0.707 gwpwidth = .1   
+2A    0.0000 352.2471      ,  cm-1 width = 0.707 gwpwidth = .1   
+3A    0.0000 778.7149  ,  cm-1 width = 0.707 gwpwidth = .1   
+4A    0.0000 778.9575,  cm-1 width = 0.707   gwpwidth = .1 
+5A    0.0000 813.6290,  cm-1 width = 0.707   gwpwidth = .1 
+6A    0.0000 993.1144  ,  cm-1 width = 0.707   gwpwidth = .1 
+7A    0.0000 1029.2721  ,  cm-1 width = 0.707   gwpwidth = .1 
+8A    0.0000 1116.2631 ,  cm-1 width = 0.707   gwpwidth = .1 
+9A    0.0000 1431.1820   ,  cm-1 width = 0.707  gwpwidth = .1  
+10A    0.0000 1491.1596 ,  cm-1 width = 0.707  gwpwidth = .1  
+11A    0.0000 2021.4863 ,  cm-1 width = 0.707  gwpwidth = .1  
+12A    0.0000 3161.2571  ,  cm-1 width = 0.707  gwpwidth = .1  
+13A    0.0000 3167.8211 ,  cm-1 width = 0.707  gwpwidth = .1  
+14A    0.0000 3235.2717 ,  cm-1 width = 0.707  gwpwidth = .1  
+15A    0.0000 3235.4006 ,  cm-1 width = 0.707  gwpwidth = .1  
+
+end-nmode
+end-initial-geometry-section
+
+DIRDYN-SECTION
+nohess_upd
+data = dd_data_nm 
+dd_adiab   
+update = tout
+#update = always
+transfile =allene_simple_32_freg.log
+qcprogram = gaussian     method = cas
+ener0 = -115.5057238
+# substitute db = only for next 2 lines to generate DB
+#ascii_db
+db = write
+#db = none    dbmin = 0.25 
+#db = rdwr    dbmin = 0.01  dbave = 0
+#mindv = 0.1
+dbmin = 0.0000001    
+nbasis = 53
+subcmd = ./dd_data_nm/run_gdv.sh , 2 
+#qcsaveout
+qcsaveall
+end-dirdyn-section
+
+end-input

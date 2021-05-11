@@ -1,0 +1,92 @@
+#######################################################################         
+###              DD / Propagation in normal modes                  ####
+#######################################################################         
+
+RUN-SECTION                                                                     
+name = gly_nopulse
+propagation     direct = nmodes       ngwp = 15
+g-mctdh
+title =  Ehrenfest
+tfinal = 30.0   tout = 0.05 tpsi= 0.05 
+psi  gridpop   update  steps  auto
+end-run-section                                                                 
+
+INTEGRATOR-SECTION
+#gwp_method=classical
+#dynamic_gwps = normal,tind
+#gwp_method= 
+#VMF
+#rk5/all = 1d-6,minstep 1.0d-8
+#rk8/all 
+#rk5/all  1d-6 
+end-integrator-section
+INITIAL-GEOMETRY-SECTION
+#coo_distrib
+mom_distrib
+nstates = 1    init_state = 1
+#init_basis_dist = shell-diag
+init_basis_dist = shell
+cartesian = angst
+6           0.000000    0.551804    0.000000
+8           1.180783    0.821015    0.000000
+8           -0.972651    1.495666    0.000000
+6           -0.581176   -0.858463    0.000000
+7           0.398966   -1.929551    0.000000
+1           -0.517488    2.359068    0.000000
+1           -1.237505   -0.953635    0.873976
+1           -1.237505   -0.953635   -0.873976
+1           1.010868   -1.819215    0.807466
+1           1.010868   -1.819215   -0.807466
+end-cartesian
+
+nmode
+1A      0.0000    63.5772     ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+2A      0.0000    235.1146    ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+3A      0.0000    259.3160    ,  cm-1 width = 0.707  gwpwidth = .1
+4A      0.0000    462.7797    ,  cm-1 width = 0.707  gwpwidth = .1  
+5A      0.0000    511.8394    ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+6A      0.0000    636.8280    ,  cm-1 width = 0.707  gwpwidth = .1  
+7A      0.0000    677.0851    ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+8A      0.0000    833.0539    ,  cm-1 width = 0.707  gwpwidth = .1    
+9A      0.0000    930.2120    ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+10A     0.0000    960.6016    ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+11A     0.0000    1145.0093   ,  cm-1 width = 0.707  gwpwidth = .1
+12A     0.0000    1181.7367   ,  cm-1 width = 0.707  gwpwidth = .1
+13A     0.0000    1195.2527   ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+14A     0.0000    1329.3561   ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+15A     0.0000    1404.2429   ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+16A     0.0000    1419.8871   ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+17A     0.0000    1485.7382   ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+18A     0.0000    1715.2380   ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+19A     0.0000    1848.4654   ,  cm-1 width = 0.707  gwpwidth = .1
+20A     0.0000    3059.9583   ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+21A     0.0000    3096.5867   ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+22A     0.0000    3473.5011   ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+23A     0.0000    3550.2899   ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+24A     0.0000    3678.9799   ,  cm-1 width = 0.707  gwpwidth = .1  freeze
+end-nmode
+end-initial-geometry-section
+
+DIRDYN-SECTION
+nohess_upd
+data = dd_data_nm 
+dd_adiab   
+update = tout
+#update = always
+transfile = gly_freq.log
+qcprogram = gaussian     method = cas
+ener0 = -284.423455785
+# substitute db = only for next 2 lines to generate DB
+#ascii_db
+db = write
+#db = none    dbmin = 0.25 
+#db = rdwr    dbmin = 0.01  dbave = 0
+#mindv = 0.1
+dbmin = 0.0000001    
+nbasis = 85
+subcmd = ./dd_data_nm/run_gdv.sh , 2 
+#qcsaveout
+qcsaveall
+end-dirdyn-section
+
+end-input
