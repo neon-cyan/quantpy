@@ -106,7 +106,7 @@ for i in range(nsteps):
 
 import matplotlib.pyplot as plt
 
-fig, axes = plt.subplots(2, 3)
+fig, axes = plt.subplots(2, 3, num=QINP)
 #   Looks like
 #   FIG1 FIG2 FIG3
 #   FIG4 FIG5 FIG6
