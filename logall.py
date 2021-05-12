@@ -20,11 +20,12 @@ class ParseLogAll():
             nsteps += 1
         return res, nsteps
 
-def I_ImportLogalls(basedir, ngwps, gwp_dir='gwp{}_V1', fname='gwp{}_V1_dd_data_nm.logall', step_lim=None):
+def I_ImportLogalls(basedir, ngwps, gwp_dir='gwp{}_V1', fname='gwp{}_V1_dd_data_nm.logall', step_lim=None, print_steps=True):
     stepchecker = None
     datax = []
 
     for i in range(1, ngwps+1): 
+        if print_steps: print(f'Parsing GWP {i}/{ngwps}')
         # Plus one is to compensate for weirdness of python range()
         # We want to loop over 1,2,3 ... ngwp-1, ngwp
     
