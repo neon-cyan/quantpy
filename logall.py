@@ -20,76 +20,109 @@ class ParseLogAll():
             nsteps += 1
         return res, nsteps
 
-def I_ImportLogalls(basedir, ngwps, gwp_dir='gwp{}_V1', fname='gwp{}_V1_dd_data_nm.logall', step_lim=None, print_steps=True):
-    stepchecker = None
-    datax = []
+    def I_ImportLogalls(basedir, ngwps, gwp_dir_fmt='gwp{}_V1', fname='gwp{}_V1_dd_data_nm.logall', 
+    step_lim=None, print_steps=True, 
+    quantities=['xyz', 'ci', 'csf', 'mq', 'sd', 'an', 'am']):
+        # Quantities options are
+        # xyz   = geometries
+        # ci    = CI Coeff
+        # csf   = CSF Coeff
+        # mq    = Mulliken Q         #TODO Split into sum/unsum?
+        # sd    = Spin density       #TODO Split into sum/unsum?
+        # dp    = Dipole moment
+        # an    = Atom numbers
+        # am    = Atom masses
+        # fo    = Forces
+        # maxf  = max force
+        # rmsf  = rms force          # NYI
+        # casde = CASSCF DE          # NYI
 
-    for i in range(1, ngwps+1): 
-        if print_steps: print(f'Parsing GWP {i}/{ngwps}')
-        # Plus one is to compensate for weirdness of python range()
-        # We want to loop over 1,2,3 ... ngwp-1, ngwp
-    
-        loagallf = os.path.join(basedir, gwp_dir.format(i), fname.format(i))
-        assert(os.path.exists(loagallf))
-        with open(loagallf, 'r') as f:
-            data = f.read()
-        parsed_data, nsteps = ParseLogAll.parse(data, step_lim = step_lim)
+        steps = None
+        datax = []
 
-        # Make sure all GWP loagalls contain same num steps
-        if stepchecker == None:
-            stepchecker = nsteps
-        else:
-            assert(stepchecker == nsteps)
-        datax.append(parsed_data)
+        for i in range(1, ngwps+1): 
+            if print_steps: print(f'Parsing GWP {i}/{ngwps}')
+            # Plus one is to compensate for weirdness of python range()
+            # We want to loop over 1,2,3 ... ngwp-1, ngwp
+        
+            loagallf = os.path.join(basedir, gwp_dir_fmt.format(i), fname.format(i))
+            assert(os.path.exists(loagallf))
+            with open(loagallf, 'r') as f:
+                data = f.read()
+            parsed_data, nsteps = ParseLogAll.parse(data, step_lim = step_lim)
 
-    assert(len(datax) == ngwps) # Quick sanity check
+            # Make sure all GWP loagalls contain same num steps
+            if steps == None:
+                steps = nsteps
+            else:
+                assert(steps == nsteps)
+            datax.append(parsed_data)
 
-    # Pull out constant params - atom numbers / atom weights / forces @ t=0
-    atomnos     = datax[0][0]['atomnos']
-    atommasses  = datax[0][0]['atommasses']
-    init_forces = datax[0][0]['forces']
-    #  Work way through the data to gen GWPx matrices
-    diabats =  np.zeros([ngwps, stepchecker, len(datax[0][0]['diabats'])],   dtype=complex)
-    adiabats = np.zeros([ngwps, stepchecker, len(datax[0][0]['adiabats'])],  dtype=complex)
-    geomx    = np.zeros([ngwps, stepchecker, len(datax[0][0]['geom_init']), 3])
+        assert(len(datax) == ngwps) # Quick sanity check (GWP in = GWP out)
 
-    mullikensum = np.zeros([ngwps,stepchecker,  len(datax[0][0]['mulliken_sum'])])
-    mullikenmap = list(datax[0][0]['mulliken_sum'].keys())
+        results = {}
+        results['steps'] = steps
+        # First pull constants
+        if 'an' in quantities:
+            results['atomnos'] = datax[0][0]['atomnos']
+        if 'am' in quantities:
+            results['atommasses']  = datax[0][0]['atommasses']
 
-    spindensum = np.zeros([ngwps,stepchecker,  len(datax[0][0]['spinden_sum'])])
-    spindenmap = list(datax[0][0]['spinden_sum'].keys())
+        #  Work way through scalar data to gen [GWP x Step]
+        if 'ci' in quantities:
+            results['adiabats'] = np.zeros([ngwps, steps, len(datax[0][0]['adiabats'])],  dtype=complex)
+        if 'csf' in quantities:
+            results['diabats'] =  np.zeros([ngwps, steps, len(datax[0][0]['diabats'])],   dtype=complex)
+        if 'maxf' in quantities:
+            results['maxforces'] = np.zeros([ngwps, steps])
 
-    biggest_maxf = np.zeros(ngwps)
+        # Vector quantities [GWP x Step x Dim]
+        if 'xyz' in quantities:
+            results['geomx'] = np.zeros([ngwps, steps, len(datax[0][0]['geom_init']), 3])
 
-    for i, gwp in enumerate(datax):
-        for j, ts in enumerate(gwp):
-            diabats[i,j] = np.array(MathUtils.dict_to_list(ts['diabats']))
-            adiabats[i,j] = np.array(MathUtils.dict_to_list(ts['adiabats']))
+        if 'fo' in quantities:
+            results['forces'] = np.zeros((ngwps, steps, len(datax[0][0]['forces']), 3))
+            
+        if 'dp' in quantities:
+            results['dipolemom'] = np.zeros((ngwps, steps, 3))
+        
+        if 'mq' in quantities:
+            results['mullikensum'] = np.zeros([ngwps,steps,  len(datax[0][0]['mulliken_sum'])])
+            results['mullikenmap'] = list(datax[0][0]['mulliken_sum'].keys())
+        
+        if 'sd' in quantities:
+            results['spindensum'] = np.zeros([ngwps,steps,  len(datax[0][0]['spinden_sum'])])
+            results['spindenmap'] = list(datax[0][0]['spinden_sum'].keys())
 
-            gtemp = MathUtils.dict_to_list(ts['geom_init'])
-            gtemp = [x[1] for x in gtemp]
-            geomx[i,j] = np.array(gtemp)
+        for i, gwp in enumerate(datax):
+            for j, ts in enumerate(gwp):
+                if 'ci' in quantities:
+                    results['adiabats'][i,j] = np.array(MathUtils.dict_to_list(ts['adiabats']))
 
-            for atomidx, mullsum in ts['mulliken_sum'].items():
-                mullikensum[i,j,mullikenmap.index(atomidx)] = mullsum
+                if 'csf' in quantities:
+                    results['diabats'][i,j] = np.array(MathUtils.dict_to_list(ts['diabats']))
+                
+                if 'xyz' in quantities:
+                    gtemp = MathUtils.dict_to_list(ts['geom_init'])
+                    gtemp = [x[1] for x in gtemp]
+                    results['geomx'][i,j] = np.array(gtemp)
+                
+                if 'fo' in quantities:
+                    ftemp =  MathUtils.dict_to_list(ts['forces'])
+                    results['forces'][i,j] = np.array(ftemp)
 
-            for atomidx, sdsum in ts['spinden_sum'].items():
-                spindensum[i,j,spindenmap.index(atomidx)] = sdsum
+                if 'dp' in quantities:
+                    results['dipolemom'][i,j] = np.array(ts['dipole'][0])
 
-        biggest_maxf[i] = max([x['maxforce'] for x in gwp])
+                if 'mq' in quantities:
+                    for atomidx, mullsum in ts['mulliken_sum'].items():
+                        results['mullikensum'][i,j,results['mullikenmap'].index(atomidx)] = mullsum
 
-    res = {    
-        'atomnos'       : atomnos,
-        'atommasses'    : atommasses,
-        'init_forces'   : init_forces,
-        'diabats'       : diabats,
-        'adiabats'      : adiabats,
-        'geomx'         : geomx,
-        'mullikensum'   : mullikensum,
-        'mullikenmap'   : mullikenmap,
-        'spindensum'    : spindensum,
-        'spindenmap'    : spindenmap,
-        'biggest_maxf'  : biggest_maxf,
-        'steps'         : stepchecker,
-    }
-    return res
+                if 'sd' in quantities:
+                    for atomidx, sdsum in ts['spinden_sum'].items():
+                        results['spindensum'][i,j,results['spindenmap'].index(atomidx)] = sdsum
+
+                if 'maxf' in quantities:
+                    results['maxforces'][i,j] = ts['maxforce']
+
+        return results

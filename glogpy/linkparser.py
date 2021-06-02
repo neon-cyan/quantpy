@@ -161,7 +161,7 @@ class linkparsers():
         })
         return result # Immitiate the CCLIB format [https://cclib.github.io/data.html]
     
-    def L601(txt, spin_dens = False):
+    def L601(txt, spin_dens = False, dipole=False):
         muliken = {}
         muliken_sum = {}
 
@@ -203,6 +203,10 @@ class linkparsers():
                     # print(subln)
                     atomnum, _, mq = subln.split()
                     muliken_sum[int(atomnum)] = float(mq)
+
+            elif ('Dipole moment' in ln) and dipole:
+                _, x, _, y, _, z, _, tot = txt[i+1].split()
+                dm = [[float(x),float(y),float(z)],float(tot)]
             else: continue
 
         result = {
@@ -212,6 +216,9 @@ class linkparsers():
         if spin_dens:
             result['spinden'] = spin_den
             result['spinden_sum'] = spin_den_sum
+
+        if dipole:
+            result['dipole'] = dm
         return result
 
     def L510_TD(txt):

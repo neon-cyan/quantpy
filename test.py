@@ -1,7 +1,6 @@
 import unittest
 from quatics_lexers import QuanticsParsers
 from logall import ParseLogAll
-from logall import I_ImportLogalls
 
 class Test_quantpy(unittest.TestCase):
     def test_allene_inp_parse(self):
@@ -47,10 +46,25 @@ class Test_quantpy(unittest.TestCase):
         all_out, _ = ParseLogAll.parse(data)
 
     def test_pullall_gly_partial(self):
-        data = I_ImportLogalls('testfiles/out_testdir/glycine/dd_data_nm', 15, step_lim=10)
+        data = ParseLogAll.I_ImportLogalls('testfiles/out_testdir/glycine/dd_data_nm', 15, 
+        print_steps=False,
+        step_lim=3)
+
+    def test_pullall_gly_partial_allq(self):
+        data = ParseLogAll.I_ImportLogalls('testfiles/out_testdir/glycine/dd_data_nm', 15, 
+        step_lim=3,
+        print_steps=False,
+        quantities=['xyz', 'ci', 'csf', 'mq', 'sd', 'dp', 'an', 'am', 'fo', 'maxf', 'rmsf'])
+
+    def test_pullall_gly_partial_minq(self):
+        data = ParseLogAll.I_ImportLogalls('testfiles/out_testdir/glycine/dd_data_nm', 15, 
+        step_lim=3,
+        print_steps=False,
+        quantities=['xyz', 'an', 'am'])
+
 
     def test_pullall_gly_full(self):
-        data = I_ImportLogalls('testfiles/out_testdir/glycine/dd_data_nm', 15)
+        data = ParseLogAll.I_ImportLogalls('testfiles/out_testdir/glycine/dd_data_nm', 15, print_steps=False)
 
 if __name__ == '__main__':
     unittest.main()

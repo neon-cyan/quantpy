@@ -1,7 +1,7 @@
 import mathutils
 from glogpy.freqency_job import frequency_job
 from quatics_lexers import QuanticsParsers
-import logall
+from logall import ParseLogAll
 import numpy as np
 import sys
 import os
@@ -82,7 +82,7 @@ print(f'FREQ file parsed')
 
 
 # Load in all GWP logalls
-data_gwpx = logall.I_ImportLogalls(datadir, q_inp_data['ngwp'], step_lim=STEPLIMS)
+data_gwpx = ParseLogAll.I_ImportLogalls(datadir, q_inp_data['ngwp'], step_lim=STEPLIMS)
 print('Read GWP files OK')
 nsteps = data_gwpx['steps']
 assert(nsteps == len(q_out_data))

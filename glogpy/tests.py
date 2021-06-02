@@ -30,7 +30,6 @@ class TestJobs(unittest.TestCase):
 
         self.assertEqual(ans['vibfreqs'][0],415.5995)
         self.assertEqual(ans['vibfreqs'][-1],3231.3848)
-        print(ans)
 
     def test_gly_dynamics(self):
         with open('glogpy/tests/qdyn_gly.log', 'r') as f:
@@ -39,7 +38,7 @@ class TestJobs(unittest.TestCase):
         ans = gj.parse()
 
         self.assertDictEqual(ans['atomnos'],{1: 6, 2: 8, 3: 8, 4: 6, 5: 7, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1})
-
+        print(ans)
     def test_allene_dynamics(self):
         with open('glogpy/tests/qdyn_allene.log', 'r') as f:
             data = f.read()
