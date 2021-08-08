@@ -33,8 +33,7 @@ class ParseLogAll():
         # an    = Atom numbers
         # am    = Atom masses
         # fo    = Forces
-        # maxf  = max force
-        # rmsf  = rms force          # NYI
+        # maxf  = max + rms force
         # casde = CASSCF DE          # NYI
 
         steps = None
@@ -75,6 +74,7 @@ class ParseLogAll():
             results['diabats'] =  np.zeros([ngwps, steps, len(datax[0][0]['diabats'])],   dtype=complex)
         if 'maxf' in quantities:
             results['maxforces'] = np.zeros([ngwps, steps])
+            results['rmsforces'] = np.zeros([ngwps, steps])
 
         # Vector quantities [GWP x Step x Dim]
         if 'xyz' in quantities:
@@ -88,11 +88,11 @@ class ParseLogAll():
         
         if 'mq' in quantities:
             results['mullikensum'] = np.zeros([ngwps,steps,  len(datax[0][0]['mulliken_sum'])])
-            results['mullikenmap'] = list(datax[0][0]['mulliken_sum'].keys())
+            results['mullikenmap'] = [int(i) for i in list(datax[0][0]['mulliken_sum'].keys())]
         
         if 'sd' in quantities:
             results['spindensum'] = np.zeros([ngwps,steps,  len(datax[0][0]['spinden_sum'])])
-            results['spindenmap'] = list(datax[0][0]['spinden_sum'].keys())
+            results['spindenmap'] = [int(i) for i in list(datax[0][0]['spinden_sum'].keys())]
 
         for i, gwp in enumerate(datax):
             for j, ts in enumerate(gwp):
@@ -124,5 +124,5 @@ class ParseLogAll():
 
                 if 'maxf' in quantities:
                     results['maxforces'][i,j] = ts['maxforce']
-
+                    results['rmsforces'][i,j] = ts['rmsforce']
         return results

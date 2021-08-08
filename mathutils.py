@@ -2,6 +2,18 @@ import numpy as np
 import copy
 
 class MathUtils:
+    def bond_angle(a1, a2, a3, mode="rad"):
+        v1 = a1-a2
+        v2 = a3-a2
+        v1 /= np.linalg.norm(v1)
+        v2 /= np.linalg.norm(v2)
+        anglerad = np.arccos(np.dot(v1, v2))
+        if mode == "rad":
+            return anglerad
+        elif mode == "deg":
+            return np.rad2deg(anglerad)
+        else: raise Exception("Illegal mode for bond angle")
+
     def bond_length(pos1, pos2):
         # Expect a tensor shape 2,3
         d = np.linalg.norm(pos1 - pos2)

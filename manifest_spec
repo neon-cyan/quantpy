@@ -1,0 +1,17 @@
+The manifest.json can be considered a summary of extracted properties
+
+{
+"steps": 401,                               ~ Number of steps extracted
+"atomnos": {"1": 6, ... "4": 1},            ~ Atom idx : Atom number
+"atommasses": {"1": 12.0 ... "4": 1.00783}, ~ Atom idx : Atomic mass
+"quantities": [],                           ~ The quantities extracted
+                                            ~ "w"   = weights
+                                            ~ "t"   = times
+                                            ~ "ci"  = Adibatic state evolution
+                                            ~ "csf" = Diabatic state evolution
+                                            ~ "mq"  = Mulliken charges
+                                            ~ "sd"  = Spin densities
+                                            ~ "xyz" = Geometries
+"mullikenmap": [1,2,3],                     ~ Atom idx of summed MQs
+"spindenmap": [1,2,3],                      ~ Atom idx of summed SDs
+}
