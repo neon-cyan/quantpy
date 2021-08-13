@@ -56,9 +56,8 @@ fig, axes = plt.subplots(1, len(commands), num=manifest_path, figsize=(wpp * len
 if len(commands) == 1 : axes = [axes] # MPL messes with array if only one plot => Need to re-array
 
 for n, c in enumerate(commands):
-    print(c)
     cmd, ins = c.split('=')
-
+    # GEOMETRICS
     if cmd == 'BL':
         BPS = []
         for x in ins.split(','):
@@ -112,6 +111,58 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right');
 
+    elif cmd == 'BA':
+        BPS = []
+        for x in ins.split(','):
+            a, b, c = [int(z) for z in x.split('-')]
+            BPS.append([a,b,c])
+
+        for a in BPS:
+            dp = []
+            for x in range(nsteps):
+                dp.append(mathutils.MathUtils.bond_angle(avegeom[x, a[0]-1],avegeom[x, a[1]-1], avegeom[x, a[2]-1] ))
+
+            try: alab1 = ATOMICLABELS[manifest['atomnos'][str(a[0])]-1]
+            except: alab1 = '?'
+            try: alab2 = ATOMICLABELS[manifest['atomnos'][str(a[1])]-1]
+            except: alab2 = '?'
+            try: alab3 = ATOMICLABELS[manifest['atomnos'][str(a[2])]-1]
+            except: alab3 = '?'
+
+            axes[n].plot(times, dp, label=f'{alab1}[{a[0]}] - {alab2}[{a[1]}] - {alab3}[{a[2]}]')
+        axes[n].set_ylabel('Bond angle (rad)')
+        axes[n].set_title('Bond angle')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right');
+
+    elif cmd == 'DA':
+        BPS = []
+        for x in ins.split(','):
+            a, b, c, d = [int(z) for z in x.split('-')]
+            BPS.append([a,b,c,d])
+
+        for a in BPS:
+            dp = []
+            for x in range(nsteps):
+                dha = mathutils.MathUtils.dihedral([avegeom[x, a[0]-1],avegeom[x, a[1]-1], avegeom[x, a[2]-1], avegeom[x, a[3]-1] ])
+                dp.append(dha)
+
+            try: alab1 = ATOMICLABELS[manifest['atomnos'][str(a[0])]-1]
+            except: alab1 = '?'
+            try: alab2 = ATOMICLABELS[manifest['atomnos'][str(a[1])]-1]
+            except: alab2 = '?'
+            try: alab3 = ATOMICLABELS[manifest['atomnos'][str(a[2])]-1]
+            except: alab3 = '?'
+            try: alab4 = ATOMICLABELS[manifest['atomnos'][str(a[3])]-1]
+            except: alab4 = '?'
+
+            axes[n].plot(times, dp, label=f'{alab1}[{a[0]}] - {alab2}[{a[1]}] - {alab3}[{a[2]}] - {alab4}[{a[3]}]')
+        axes[n].set_ylabel('Dihedral angle (rad)')
+        axes[n].set_title('Bond angle')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right');
+        
+    # ELECTRONICS
     elif cmd == 'CIs':
         CI_STATES = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(adiabats.shape[0]):
@@ -139,9 +190,10 @@ for n, c in enumerate(commands):
     elif cmd == 'SD':
         SDS = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(len(manifest['spindenmap'])):
-            if SDS == None : pass
-            elif i not in SDS: continue
             atom_number = manifest['spindenmap'][i]
+            if SDS == None : pass
+            elif atom_number not in SDS: continue
+            
             try: symbol = ATOMICLABELS[manifest['atomnos'][str(atom_number)]-1]
             except: symbol = '?'
             axes[n].plot(times, sd[i], label='{} [{}]'.format(symbol, atom_number))
@@ -150,13 +202,13 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right');
 
-
     elif cmd == 'MQ':
         MQS = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(len(manifest['mullikenmap'])):
-            if MQS == None : pass
-            elif i not in MQS: continue
             atom_number = manifest['mullikenmap'][i]
+            if MQS == None : pass
+            elif atom_number not in MQS: continue
+            
             try: symbol = ATOMICLABELS[manifest['atomnos'][str(atom_number)]-1]
             except: symbol = '?'
             axes[n].plot(times, mq[i], label='{} [{}]'.format(symbol, atom_number))
@@ -165,6 +217,7 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right');
     
+    # FFT
     elif cmd == 'FFT':
         # [FFT=cd|mq|csf:CHOP:[START-END]|A]
         mode, CHOP, RANGE, selector = ins.split(':')
@@ -192,8 +245,9 @@ for n, c in enumerate(commands):
         fig =  plt.figure(num=manifest_path, figsize=(20.0, 15.0))
 
         for i in range(data_fft.shape[0]):
-            if selector == None : pass
-            elif i+1 not in selector: continue
+            if mode=='csf':
+                if selector == None : pass
+                elif i+1 not in selector: continue
 
             ft = np.fft.fft(data_fft[i])
             ft = ft.real**2 + ft.imag**2
@@ -202,6 +256,9 @@ for n, c in enumerate(commands):
             if mode == 'sd' or mode == 'mq':
                 if mode == 'sd' : atom_number = manifest['spindenmap'][i]
                 else : atom_number = manifest['mullikenmap'][i]
+                
+                if selector == None : pass
+                elif atom_number not in selector: continue
 
                 try: symbol = ATOMICLABELS[manifest['atomnos'][str(atom_number)]-1]
                 except: symbol = '?'
@@ -213,7 +270,10 @@ for n, c in enumerate(commands):
         axes[n].set_ylabel('Intensity')
         axes[n].set_xlabel('Frequency PHz')
         axes[n].legend(loc='upper right');
+    
 
+    else:
+        raise Exception(f'Illegal mode {cmd}')
 fig.tight_layout() 
 if OUTPUT=='x11' : plt.show()
 else: plt.savefig(OUTPUT, dpi=500)

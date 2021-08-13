@@ -14,10 +14,6 @@ Some simple plotting scripts
 - Bond lengths
 - Normal modes
 
-Some other things are in various stages of development
-- Dipole moments [NYI]
-- QTAIM paramters
-
  
 ### Running extractor
 Recommended to set up a virtual python enviroment (conda or venv)
@@ -42,6 +38,15 @@ python3 extract.py --h
 ### Visulatations
 These scripts are found in analysis folder
 
-- pairplot_sd_mq - Plots up the spin densities or mulliken charges in pairs
-- geom - plotting of bond angles/lengths and dihedral angles
-- plotter - *new* all in one plotter
+- pairplot_sd_mq - Plots up all the spin densities (or mulliken charges) in pairs
+- plotter - *new* all in one plotter. Plot up a range a properties
+
+## TODO
+Missing a few things from old scripts - these are all on the todo list:
+- [EXTRACTOR] Make work for incomplete jobs (add a --partial flag?)
+- [ANALYSIS] Spin density heatmaps [maybe MQs too]
+- [ANALYSIS] Plotting up custom CSF vectors (eg CSFV=0.5/0/0.5,0.33/0.33/0.33)
+- [ANALYSIS] Single GWP analysis
+- [EXTRACTOR] Extract + plot up dipoles. Hopefully coord system is OK
+- [EXTRACTOR] CASSCF DeltaE
+- New debugging plot suite? CAS DE / MaxForce / CAS Energy (with hints?)
