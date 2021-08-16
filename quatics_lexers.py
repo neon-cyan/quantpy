@@ -72,13 +72,13 @@ class QuanticsParsers():
         for g in data.split(DIVISOR)[1:-1]:
             d = {}
 
-            group = re.search('Time\ {1,}=\ {1,}-?(\.|\d){1,}', g).group()
+            group = re.search('Time\ {0,}=\ {0,}-?(\.|\d){1,}', g).group()
             d['time'] = float(group.split('=')[1]) # Clean up whitespace
 
-            group = re.search('E-tot\ {1,}=\ {1,}-?(\.|\d){1,}', g).group()
+            group = re.search('E-tot\ {0,}=\ {0,}-?(\.|\d){1,}', g).group()
             d['Etot'] = float(group.split('=')[1])
 
-            group = re.search('Delta-E\ {1,}=\ {1,}-?(\.|\d){1,}', g).group()
+            group = re.search('Delta-E\ {0,}=\ {0,}-?(\.|\d){1,}', g).group()
             d['DelE'] = float(group.split('=')[1])
 
             _, diagden, grosspop, modeexp = g.split('\n\n')
