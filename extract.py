@@ -125,7 +125,7 @@ if 'nm' in args.tasks or 'xyz' in args.tasks:
     geom_init = mathutils.MathUtils.dict_to_list(freq_data['geom'])
     geom_init = np.array([x[1] for x in geom_init])
 
-    # Compute nm2xtyz and xyz2nm matrices
+    # Compute nm2xyz and xyz2nm matrices
     nm2xyz, xyz2nm = mathutils.NormModeUtils.nm_matrix(data_gwpx['atommasses'], 
     freq_data['vibfreqs'], freq_data['vibdisps'])
 
@@ -224,7 +224,7 @@ for task in args.tasks:
 
     elif task=='xyz':
         with open(os.path.join(OUTDIR, 'xyz'), 'wb') as f:
-            np.save(f, geom_init)
+            np.save(f, data_gwpx['geomx'])
         with open(os.path.join(OUTDIR, 'xyz_ave'), 'wb') as f:
             np.save(f, avegeom)
         manifest['quantities'].append('xyz')
@@ -234,10 +234,13 @@ for task in args.tasks:
         dps = np.array([[np.linalg.norm(x) for x in y] for y in data_gwpx['dipolemom']])
         dps = dps.T
         dps_ave = np.array([dps[i].dot(gwp_sf[i]) for i in range(dps.shape[0])])
+
+        with open(os.path.join(OUTDIR, 'dpv'), 'wb') as f:
+            np.save(f, data_gwpx['dipolemom'].transpose(2,1,0)) # Save unscaled vectors
         with open(os.path.join(OUTDIR, 'dps'), 'wb') as f:
-            np.save(f, dps)
+            np.save(f, dps) # Save unscaled scalars
         with open(os.path.join(OUTDIR, 'dps_ave'), 'wb') as f:
-            np.save(f, dps_ave)
+            np.save(f, dps_ave) # Save scaled scalars
         manifest['quantities'].append('dp')
 
     else:
