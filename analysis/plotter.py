@@ -52,6 +52,13 @@ nsteps = manifest['steps']
 
 import matplotlib.pyplot as plt
 
+# Define custom default colours - keep consistent between plots
+# List lossely based on https://sashamaps.net/docs/resources/20-colors/
+# Do this for the CSFs/CIs/FFT/NMs/MQ/SD
+def get_nth_col(idx):
+    cols =['#e6194B', '#3cb44b', '#FFC800', '#4363d8', '#f58231', '#42d4f4', '#f032e6', '#fabed4', '#469990', '#dcbeff', '#9A6324', '#800000', '#aaffc3', '#000075', '#a9a9a9']
+    return cols[idx%len(cols)]
+
 fig, axes = plt.subplots(1, len(commands), num=manifest_path, figsize=(wpp * len(commands), height))
 if len(commands) == 1 : axes = [axes] # MPL messes with array if only one plot => Need to re-array
 
@@ -105,7 +112,7 @@ for n, c in enumerate(commands):
 
     elif cmd == 'NM':
         for x in [int(i) for i in ins.split(',')]:
-            axes[n].plot(times, nms[x-1], label=f'NM{x}')
+            axes[n].plot(times, nms[x-1], label=f'NM{x}', color=get_nth_col(x-1))
         axes[n].set_title('Normal mode evolution')
         axes[n].set_ylabel('Normal mode excitation')
         axes[n].set_xlabel('Time (fs)')
@@ -169,7 +176,7 @@ for n, c in enumerate(commands):
             if CI_STATES == None: pass
             else:
                 if i+1 not in CI_STATES: continue
-            axes[n].plot(times, adiabats[i], label=f'CI {i+1}')
+            axes[n].plot(times, adiabats[i], label=f'CI {i+1}', color=get_nth_col(i))
         axes[n].set_title('Adiabatic [CI] state evolution')
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
@@ -181,7 +188,7 @@ for n, c in enumerate(commands):
             if CSF_STATES == None: pass
             else:
                 if i+1 not in CSF_STATES: continue
-            axes[n].plot(times, diabats[i], label=f'CSF {i+1}')
+            axes[n].plot(times, diabats[i], label=f'CSF {i+1}', color=get_nth_col(i))
         axes[n].set_title('Diabatic [CSF] state evolution')
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
@@ -196,7 +203,7 @@ for n, c in enumerate(commands):
             
             try: symbol = ATOMICLABELS[manifest['atomnos'][str(atom_number)]-1]
             except: symbol = '?'
-            axes[n].plot(times, sd[i], label='{} [{}]'.format(symbol, atom_number))
+            axes[n].plot(times, sd[i], label='{} [{}]'.format(symbol, atom_number), color=get_nth_col(atom_number))
         axes[n].set_title('Spin density evolution (H Summed)')
         axes[n].set_ylabel('Spin density')
         axes[n].set_xlabel('Time (fs)')
@@ -211,7 +218,7 @@ for n, c in enumerate(commands):
             
             try: symbol = ATOMICLABELS[manifest['atomnos'][str(atom_number)]-1]
             except: symbol = '?'
-            axes[n].plot(times, mq[i], label='{} [{}]'.format(symbol, atom_number))
+            axes[n].plot(times, mq[i], label='{} [{}]'.format(symbol, atom_number),  color=get_nth_col(atom_number))
         axes[n].set_title('Mulliken charge evolution (H Summed)')
         axes[n].set_ylabel('Mulliken charge')
         axes[n].set_xlabel('Time (fs)')
@@ -245,7 +252,7 @@ for n, c in enumerate(commands):
         fig =  plt.figure(num=manifest_path, figsize=(20.0, 15.0))
 
         for i in range(data_fft.shape[0]):
-            if mode=='csf':
+            if mode=='csf': # CSFs are picked by index
                 if selector == None : pass
                 elif i+1 not in selector: continue
 
@@ -253,7 +260,7 @@ for n, c in enumerate(commands):
             ft = ft.real**2 + ft.imag**2
             freq = np.fft.fftfreq(N, d=times_fft[1]-times_fft[0])
 
-            if mode == 'sd' or mode == 'mq':
+            if mode == 'sd' or mode == 'mq': # SD/MQ are picked based on atom number
                 if mode == 'sd' : atom_number = manifest['spindenmap'][i]
                 else : atom_number = manifest['mullikenmap'][i]
                 
@@ -263,9 +270,12 @@ for n, c in enumerate(commands):
                 try: symbol = ATOMICLABELS[manifest['atomnos'][str(atom_number)]-1]
                 except: symbol = '?'
                 label = f'{symbol}[{atom_number}]'
-            else: label = f'CSF {i+1}'
+                colour = get_nth_col(atom_number)
+            else: 
+                label = f'CSF {i+1}'
+                colour = get_nth_col(i)
 
-            axes[n].plot(freq[CHOP:int(N/2)], ft[CHOP:int(N/2)], label=label)
+            axes[n].plot(freq[CHOP:int(N/2)], ft[CHOP:int(N/2)], label=label, color=colour)
         axes[n].set_title(f'FFT {mode}')
         axes[n].set_ylabel('Intensity')
         axes[n].set_xlabel('Frequency PHz')
