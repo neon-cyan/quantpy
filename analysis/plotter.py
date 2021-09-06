@@ -12,6 +12,7 @@ if len(sys.argv) < 5:
     => [NM=1,2,3]
     => [CIs=A|1,2,3]
     => [CSFs=A|1,2,3]
+    => [AVCSFs=A|1,2,3]:av_window
     => [SD=A|1,2]
     => [MQ=A|1,2]
     => [FFT=cd|mq|csf:CHOP:[START:END]|A:1,2,3|A]
@@ -191,6 +192,25 @@ for n, c in enumerate(commands):
             axes[n].plot(times, diabats[i], label=f'CSF {i+1}', color=get_nth_col(i))
         axes[n].set_title('Diabatic [CSF] state evolution')
         axes[n].set_ylabel('State population')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right');
+
+    elif cmd == 'AVCSFs':
+        def moving_avg(x, n):
+            cumsum = np.cumsum(np.insert(x, 0, 0)) 
+            return (cumsum[n:] - cumsum[:-n]) / float(n)
+
+        csfs, av_window = ins.split(':')
+        av_window = int(av_window)
+        CSF_STATES = None if csfs=='A' else [int(i) for i in csfs.split(',')]
+        for i in range(diabats.shape[0]):
+            if CSF_STATES == None: pass
+            else:
+                if i+1 not in CSF_STATES: continue
+            mav = moving_avg(diabats[i], av_window)
+            axes[n].plot(times[:len(mav)], mav, label=f'AVCSF {i+1}', color=get_nth_col(i))
+        axes[n].set_title(f'{av_window} point moving average diabatic [CSF] state evolution')
+        axes[n].set_ylabel('Averaged state population')
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right');
 
