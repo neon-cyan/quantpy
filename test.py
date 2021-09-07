@@ -54,7 +54,7 @@ class Test_quantpy(unittest.TestCase):
         data = ParseLogAll.I_ImportLogalls('testfiles/out_testdir/glycine/dd_data_nm', 15, 
         step_lim=3,
         print_steps=False,
-        quantities=['xyz', 'ci', 'csf', 'mq', 'sd', 'dp', 'an', 'am', 'fo', 'maxf', 'rmsf'])
+        quantities=['xyz', 'ci', 'csf', 'mq', 'sd', 'dp', 'an', 'am', 'fo', 'maxf', 'rmsf', 'case', 'casde'])
 
     def test_pullall_gly_partial_minq(self):
         data = ParseLogAll.I_ImportLogalls('testfiles/out_testdir/glycine/dd_data_nm', 15, 

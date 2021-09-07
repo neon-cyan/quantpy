@@ -16,29 +16,24 @@ parser.add_argument('qinp', type=str,
 parser.add_argument('--adir', type=str, default='analysis',
                     help='Where to put the extracted data files [defaults to QINPDIR/analysis]')
 
-parser.add_argument('--nsteps', default='A',
+parser.add_argument('--steps', default='A',
                     help='Number of steps to parse [defaults to all steps]')
-
-
-#TODO : maxforce
-#TODO : energy
-#TODO : Dipole
-#TODO : CAS Delta-E
-
 
 #TODO MANIFEST
 
 parser.add_argument('--tasks', type=str, nargs='*', default=['nm', 'ci', 'csf', 'mq', 'sd', 'xyz'],
                     help='''Things to extract. Options are
-                    nm   = normal modes
-                    xyz  = average geometeries 
-                    ci   = adiabatic states
-                    csf  = diabatic states
-                    mq   = mulliken charges (H summed into HAs)
-                    sd   = spin density
-                    dp   = dipole [WIP]
-                    fo   = forces
-                    maxf = maxforce [WIP]
+                    nm    = normal modes
+                    xyz   = average geometeries 
+                    ci    = adiabatic states
+                    csf   = diabatic states
+                    mq    = mulliken charges (H summed into HAs)
+                    sd    = spin density (H summed into HAs)
+                    dp    = dipole [WIP]
+                    fo    = forces
+                    maxf  = maxforce
+                    casde = CASSCF (gaussian) DE
+                    nucde = Nuclear (quantics) DE #NYI
                     [defaults to nm, ci, csf, mq, sd, xyz]''')
 
 parser.add_argument('--redo', dest='redo', action='store_true',
@@ -51,7 +46,7 @@ args = parser.parse_args()
 print(args)
 
 QINP = args.qinp
-STEPLIMS = int(args.nsteps) if args.nsteps != 'A' else None
+STEPLIMS = int(args.steps) if args.steps != 'A' else None
 
 # Quick sanity check that the quantics input is real
 assert(os.path.exists(QINP))
@@ -242,6 +237,26 @@ for task in args.tasks:
         with open(os.path.join(OUTDIR, 'dps_ave'), 'wb') as f:
             np.save(f, dps_ave) # Save scaled scalars
         manifest['quantities'].append('dp')
+
+    elif task=='casde':
+        with open(os.path.join(OUTDIR, 'casde'), 'wb') as f:
+            np.save(f, data_gwpx['casde'])
+        manifest['quantities'].append('casde')
+
+    elif task=='case':
+        with open(os.path.join(OUTDIR, 'case'), 'wb') as f:
+            np.save(f, data_gwpx['case'])
+        manifest['quantities'].append('case')
+
+    elif task=='nucde':
+        with open(os.path.join(OUTDIR, 'nucde'), 'wb') as f:
+            np.save(f, [d['DelE'] for d in q_out_data])
+        manifest['quantities'].append('nucde')
+
+    elif task=='maxf':
+        with open(os.path.join(OUTDIR, 'maxf'), 'wb') as f:
+            np.save(f, data_gwpx['maxf'])
+        manifest['quantities'].append('maxf')
 
     else:
         print(f'Unknown task {task}')

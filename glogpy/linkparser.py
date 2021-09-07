@@ -224,8 +224,16 @@ class linkparsers():
     def L510_TD(txt):
         diabats = {}    # Called CSFs
         adiabats = {}   # Called CI states
+        energy = None
+        denergy = None
         for i, ln in enumerate(txt):
-            if 'Current Time Dep wavefunction in basis of configuration state functions' in ln:
+            if 'ITN=  2 MaxIt=***' in ln:
+                en, de = ln.split(' E=')[1].split('DE=')
+                de = de.split('Acc=')[0]
+                denum, depow = de.split('D')
+                energy = float(en)
+                denergy= float(denum) * (10 ** int(depow))
+            elif 'Current Time Dep wavefunction in basis of configuration state functions' in ln:
                 for csf in txt[i+2:]:
                     try:
                         s, re, im = csf.split()
@@ -240,4 +248,4 @@ class linkparsers():
                         s, re, im = cis.split()
                         adiabats[int(s)] = complex(float(re), float(im))
                     except Exception as e : break
-        return {'diabats' : diabats , 'adiabats' : adiabats}
+        return {'diabats' : diabats , 'adiabats' : adiabats, 'case' : energy, 'casde' : denergy}

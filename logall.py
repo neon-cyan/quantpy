@@ -13,10 +13,11 @@ class ParseLogAll():
         for s in sections[1:]:
             if step_lim!=None:
                 if nsteps == step_lim: break
-
-            data = dj(s.strip())
-            data = data.parse()
-            res.append(data)
+            try:
+                data = dj(s.strip())
+                data = data.parse()
+                res.append(data)
+            except: raise Exception(f'An error occured parsing step {nsteps} {txt}')
             nsteps += 1
         return res, nsteps
 
@@ -34,7 +35,8 @@ class ParseLogAll():
         # am    = Atom masses
         # fo    = Forces
         # maxf  = max + rms force
-        # casde = CASSCF DE          # NYI
+        # case  = CASSCF Energy
+        # casde = CASSCF DE
 
         steps = None
         datax = []
@@ -73,8 +75,8 @@ class ParseLogAll():
         if 'csf' in quantities:
             results['diabats'] =  np.zeros([ngwps, steps, len(datax[0][0]['diabats'])],   dtype=complex)
         if 'maxf' in quantities:
-            results['maxforces'] = np.zeros([ngwps, steps])
-            results['rmsforces'] = np.zeros([ngwps, steps])
+            results['maxf'] = np.zeros([ngwps, steps])
+            results['rmsf'] = np.zeros([ngwps, steps])
 
         # Vector quantities [GWP x Step x Dim]
         if 'xyz' in quantities:
@@ -85,7 +87,13 @@ class ParseLogAll():
             
         if 'dp' in quantities:
             results['dipolemom'] = np.zeros((ngwps, steps, 3))
-        
+
+        if 'casde' in quantities:
+            results['casde'] = np.zeros((ngwps, steps))
+
+        if 'case' in quantities:
+            results['case'] = np.zeros((ngwps, steps))
+
         if 'mq' in quantities:
             results['mullikensum'] = np.zeros([ngwps,steps,  len(datax[0][0]['mulliken_sum'])])
             results['mullikenmap'] = [int(i) for i in list(datax[0][0]['mulliken_sum'].keys())]
@@ -114,6 +122,12 @@ class ParseLogAll():
                 if 'dp' in quantities:
                     results['dipolemom'][i,j] = np.array(ts['dipole'][0])
 
+                if 'casde' in quantities:
+                    results['casde'][i,j] = ts['casde']
+
+                if 'case' in quantities:
+                    results['case'][i,j] = ts['case']
+
                 if 'mq' in quantities:
                     for atomidx, mullsum in ts['mulliken_sum'].items():
                         results['mullikensum'][i,j,results['mullikenmap'].index(atomidx)] = mullsum
@@ -123,6 +137,6 @@ class ParseLogAll():
                         results['spindensum'][i,j,results['spindenmap'].index(atomidx)] = sdsum
 
                 if 'maxf' in quantities:
-                    results['maxforces'][i,j] = ts['maxforce']
-                    results['rmsforces'][i,j] = ts['rmsforce']
+                    results['maxf'][i,j] = ts['maxforce']
+                    results['rmsf'][i,j] = ts['rmsforce']
         return results
