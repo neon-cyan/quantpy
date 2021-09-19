@@ -15,6 +15,7 @@ if len(sys.argv) < 5:
     => [AVCSFs=A|1,2,3]:av_window
     => [SD=A|1,2]
     => [MQ=A|1,2]
+    => [HM=sd|mq:atom_num:nbins:min_y:max_y]
     => [FFT=cd|mq|csf:CHOP:[START:END]|A:1,2,3|A]
     [width/panel, height]
     [Output x11 | filename.png]
