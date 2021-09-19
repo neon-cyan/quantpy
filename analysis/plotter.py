@@ -243,7 +243,65 @@ for n, c in enumerate(commands):
         axes[n].set_ylabel('Mulliken charge')
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right');
-    
+        
+    # Heatmaps - currently SD/MQ (may want to add BL)
+    elif cmd == 'HM':
+        def sbin_vals(nb, vals, val_scale, max_val, min_val):
+            x = np.zeros(nb)
+            step = (max_val-min_val)/nb
+            for n, v in enumerate(vals):
+                for i in range(nb):
+                    if (min_val + i * step) < v < (min_val + (i+1) * step):
+                        x[i] += val_scale[n]
+            return x[::-1]
+
+        def bin_vals(nb, vals, max_val, min_val):
+            val_len = len(vals)
+            return sbin_vals (nb, vals, np.repeat(1, val_len), max_val, min_val)
+
+        mode, selector, nbins, minval, maxval = ins.split(':')
+        nbins = int(nbins)
+        minval = float(minval)
+        maxval = float(maxval)
+        bindata = np.zeros((len(times), nbins))
+
+        if mode == 'sd':
+            atom_number = int(selector)
+            mapper = manifest['spindenmap'].index(atom_number)
+
+            try: symbol = ATOMICLABELS[manifest['atomnos'][str(atom_number)]-1]
+            except: symbol = '?'
+
+            axes[n].set_title(f'Spin denisity (H Summed) heatmap for atom {symbol}[{atom_number}]')
+            axes[n].set_xlabel('Spin density (H Summed)')
+
+            ave_data = np.load(os.path.join(basepath, 'sd_ave'))[mapper]
+            unbinned_data=np.load(os.path.join(basepath, 'sd'))[mapper]
+
+        elif mode == 'mq':
+            atom_number = int(selector)
+            mapper = manifest['mullikenmap'].index(atom_number)
+
+            try: symbol = ATOMICLABELS[manifest['atomnos'][str(atom_number)]-1]
+            except: symbol = '?'
+
+            axes[n].set_title(f'Mulliken charge (H Summed) heatmap for atom {symbol}[{atom_number}]')
+            axes[n].set_xlabel('Mulliken charge (H Summed)')
+
+            ave_data = np.load(os.path.join(basepath, 'mq_ave'))[mapper]
+            unbinned_data=np.load(os.path.join(basepath, 'mq'))[mapper]
+
+        else:
+            raise Exception(f"Illegal mode {mode} for heatmap")
+
+        for i, _ in enumerate(times):
+            bindata[i] = bin_vals(nbins, unbinned_data[i], maxval, minval)
+
+        axes[n].set_xlabel('Time (fs)')
+        timewidth = (times[1]-times[0])/2 # Tiny fudging to get heatmap to align nicely
+        axes[n].imshow(bindata.T, cmap='inferno', extent=(-timewidth, times[-1]+timewidth, minval, maxval), aspect='auto')
+        axes[n].plot(times, ave_data, color='white', linestyle='dotted',linewidth=2)
+
     # FFT
     elif cmd == 'FFT':
         # [FFT=cd|mq|csf:CHOP:[START-END]|A]
