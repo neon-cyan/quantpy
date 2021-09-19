@@ -214,7 +214,7 @@ for task in args.tasks:
         with open(os.path.join(OUTDIR, 'nm_ave'), 'wb') as f:
             np.save(f, res)
         with open(os.path.join(OUTDIR, 'nm'), 'wb') as f:
-            np.save(f, nmdata)
+            np.save(f, nmdata.transpose([2,0,1]))
         manifest['quantities'].append('nm')
 
     elif task=='xyz':
