@@ -196,11 +196,23 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right');
 
-    elif cmd == 'AVCSFs':
-        def moving_avg(x, n):
-            cumsum = np.cumsum(np.insert(x, 0, 0)) 
-            return (cumsum[n:] - cumsum[:-n]) / float(n)
+    elif cmd == 'CSFv':
+        # Expect a list of label:1,1,0,0_label:0,0,1,1
+        to_plot={}
+        for i in ins.split('_'):
+            label, nums = i.split(':')
+            nums = [float(j) for j in nums.split(',')]
+            assert(len(nums)==diabats.shape[0])
+            to_plot[label] = np.array(nums)
+        for k, v in to_plot.items():
+            data = np.dot(v, diabats)
+            axes[n].plot(times, data, label=k)
+        axes[n].set_title('Diabatic [CSF] state vector evolution')
+        axes[n].set_ylabel('State population')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right');
 
+    elif cmd == 'AVCSFs':
         csfs, av_window = ins.split(':')
         av_window = int(av_window)
         CSF_STATES = None if csfs=='A' else [int(i) for i in csfs.split(',')]
@@ -208,9 +220,31 @@ for n, c in enumerate(commands):
             if CSF_STATES == None: pass
             else:
                 if i+1 not in CSF_STATES: continue
-            mav = moving_avg(diabats[i], av_window)
+            mav = mathutils.MathUtils.moving_avg(diabats[i], av_window)
             axes[n].plot(times[:len(mav)], mav, label=f'AVCSF {i+1}', color=get_nth_col(i))
         axes[n].set_title(f'{av_window} point moving average diabatic [CSF] state evolution')
+        axes[n].set_ylabel('Averaged state population')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right');
+
+    elif cmd == 'AVCSFv':
+        # Expect format av_window_label:1,0,0_label:0,0,1
+        av_window, *toplt = ins.split('_')
+        av_window = int(av_window)
+
+        to_plot={}
+        for i in toplt:
+            print(i)
+            label, nums = i.split(':')
+            nums = [float(j) for j in nums.split(',')]
+            assert(len(nums)==diabats.shape[0])
+            to_plot[label] = np.array(nums)
+        mavs = np.array([mathutils.MathUtils.moving_avg(i, av_window) for i in diabats])
+        print(mavs.shape)
+        for k, v in to_plot.items():
+            data = np.dot(v, mavs)
+            axes[n].plot(times[:len(data)], data, label=k)
+        axes[n].set_title(f'{av_window} point moving average diabatic [CSF] state custom vector evolution')
         axes[n].set_ylabel('Averaged state population')
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right');

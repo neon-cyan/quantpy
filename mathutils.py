@@ -2,6 +2,7 @@ import numpy as np
 import copy
 
 class MathUtils:
+
     def bond_angle(a1, a2, a3, mode="rad"):
         v1 = a1-a2
         v2 = a3-a2
@@ -63,6 +64,9 @@ class MathUtils:
             i += 1
         return res
 
+    def moving_avg(x, n):
+        cumsum = np.cumsum(np.insert(x, 0, 0)) 
+        return (cumsum[n:] - cumsum[:-n]) / float(n)
 
 
 class NormModeUtils:
