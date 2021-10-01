@@ -12,7 +12,9 @@ if len(sys.argv) < 5:
     => [NM=1,2,3]
     => [CIs=A|1,2,3]
     => [CSFs=A|1,2,3]
-    => [AVCSFs=A|1,2,3]:av_window
+    => [CSFv=label:1,1,0,0_label:0,0,1,1]
+    => [AVCSFs=A|1,2,3:av_window]
+    => [AVCSFv=av_window_label:1,0,0_label:0,0,1]
     => [SD=A|1,2]
     => [MQ=A|1,2]
     => [HM=sd|mq:atom_num:nbins:min_y:max_y]
