@@ -2,19 +2,11 @@
 quantpy is a link-wise gaussian and quantics parser, with a focus on Ehrenfest-dynamics simulations
 
 ### Features
-Built-in flexible link-wise gaussian parser (glogpy)
-Quantics input + output parsers
+Built-in flexible link-wise gaussian parser (glogpy) - may wish to factor this out as a submodule in future
+Rudimentary quantics input + output parsers
 
-Extraction script drops numpy array binaries - GWP scaled and raw - for plotting as needed
-Some simple plotting scripts
-- CSF population
-- CI State population
-- Spin denities
-- Muilliken charges
-- Bond lengths
-- Normal modes
+Extraction script drops numpy array binaries - GWP scaled and raw - for manipulating & plotting as needed
 
- 
 ### Running extractor
 Recommended to set up a virtual python enviroment (conda or venv)
 Install requirements : 
@@ -43,10 +35,6 @@ These scripts are found in analysis folder
 
 ## TODO
 Missing a few things from old scripts - these are all on the todo list:
-- [EXTRACTOR] Make work for incomplete jobs (add a --partial flag?)
-- [ANALYSIS] Spin density heatmaps [maybe MQs too]
-- [ANALYSIS] Plotting up custom CSF vectors (eg CSFV=0.5/0/0.5,0.33/0.33/0.33)
 - [ANALYSIS] Single GWP analysis
-- [EXTRACTOR] Extract + plot up dipoles. Hopefully coord system is OK
-- [EXTRACTOR] CASSCF DeltaE
-- New debugging plot suite? CAS DE / MaxForce / CAS Energy (with hints?)
+- [PLOTTER] Plot up dipoles. Hopefully coord system is OK
+- [ANALYSIS] New debugging plot suite? CAS DE / MaxForce / CAS Energy (with hints?)
