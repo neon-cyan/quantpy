@@ -40,6 +40,9 @@ class QuanticsParsers():
                 group = re.search('tpsi\s?=\s?(\d|\.){1,}', line).group()
                 d['tpsi'] = float(group.split('=')[1])
 
+            if 'tout' in line and 'update' not in line:
+                group = re.search('tout\s?=\s?(\d|\.){1,}', line).group()
+                d['tout'] = float(group.split('=')[1])
         return d
     def parse_output(data):
         # Wil return a dict containing quantics output lists:
