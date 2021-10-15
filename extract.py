@@ -21,20 +21,20 @@ parser.add_argument('--steps', default='A',
 
 #TODO MANIFEST
 
-parser.add_argument('--tasks', type=str, nargs='*', default=['nm', 'ci', 'csf', 'mq', 'sd', 'xyz'],
+parser.add_argument('--tasks', type=str, nargs='*', default=['nm', 'ci', 'csf', 'mq', 'sd', 'xyz', 'maxf', 'casde', 'nucde'],
                     help='''Things to extract. Options are
-                    nm    = normal modes
-                    xyz   = average geometeries 
-                    ci    = adiabatic states
-                    csf   = diabatic states
-                    mq    = mulliken charges (H summed into HAs)
-                    sd    = spin density (H summed into HAs)
+                    nm    = normal modes*
+                    xyz   = average geometeries*
+                    ci    = adiabatic states*
+                    csf   = diabatic states*
+                    mq    = mulliken charges (H summed into HAs)*
+                    sd    = spin density (H summed into HAs)*
                     dp    = dipole [WIP]
                     fo    = forces
-                    maxf  = maxforce
-                    casde = CASSCF (gaussian) DE
-                    nucde = Nuclear (quantics) DE #NYI
-                    [defaults to nm, ci, csf, mq, sd, xyz]''')
+                    maxf  = maxforce*
+                    casde = CASSCF (gaussian) DE*
+                    nucde = Nuclear (quantics) DE*
+                    defaults marked with a *''')
 
 parser.add_argument('--redo', dest='redo', action='store_true',
                     help='Ignore the extraction manifest (if it exists) [defaults to false]')
