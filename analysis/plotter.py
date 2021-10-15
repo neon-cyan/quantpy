@@ -88,7 +88,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Bond lengths')
         axes[n].set_ylabel('Bond length (Å)')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
 
     elif cmd == 'PBL':
         BPS = []
@@ -111,7 +111,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Bond lengths (fractional)')
         axes[n].set_ylabel('Fractional change')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
 
 
     elif cmd == 'NM':
@@ -120,7 +120,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Normal mode evolution')
         axes[n].set_ylabel('Normal mode excitation')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
 
     elif cmd == 'BA':
         BPS = []
@@ -144,7 +144,7 @@ for n, c in enumerate(commands):
         axes[n].set_ylabel('Bond angle (rad)')
         axes[n].set_title('Bond angle')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
 
     elif cmd == 'DA':
         BPS = []
@@ -171,7 +171,7 @@ for n, c in enumerate(commands):
         axes[n].set_ylabel('Dihedral angle (rad)')
         axes[n].set_title('Bond angle')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
         
     # ELECTRONICS
     elif cmd == 'CIs':
@@ -184,7 +184,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Adiabatic [CI] state evolution')
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
 
     elif cmd == 'CSFs':
         CSF_STATES = None if ins=='A' else [int(i) for i in ins.split(',')]
@@ -196,7 +196,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Diabatic [CSF] state evolution')
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
 
     elif cmd == 'CSFv':
         # Expect a list of label:1,1,0,0_label:0,0,1,1
@@ -212,7 +212,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Diabatic [CSF] state vector evolution')
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
 
     elif cmd == 'AVCSFs':
         csfs, av_window = ins.split(':')
@@ -227,7 +227,7 @@ for n, c in enumerate(commands):
         axes[n].set_title(f'{av_window} point moving average diabatic [CSF] state evolution')
         axes[n].set_ylabel('Averaged state population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
 
     elif cmd == 'AVCSFv':
         # Expect format av_window_label:1,0,0_label:0,0,1
@@ -249,7 +249,7 @@ for n, c in enumerate(commands):
         axes[n].set_title(f'{av_window} point moving average diabatic [CSF] state custom vector evolution')
         axes[n].set_ylabel('Averaged state population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
 
     elif cmd == 'SD':
         SDS = None if ins=='A' else [int(i) for i in ins.split(',')]
@@ -264,7 +264,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Spin density evolution (H Summed)')
         axes[n].set_ylabel('Spin density')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
 
     elif cmd == 'MQ':
         MQS = None if ins=='A' else [int(i) for i in ins.split(',')]
@@ -279,7 +279,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Mulliken charge evolution (H Summed)')
         axes[n].set_ylabel('Mulliken charge')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
         
     # Heatmaps - currently SD/MQ (may want to add BL)
     elif cmd == 'HM':
@@ -394,7 +394,7 @@ for n, c in enumerate(commands):
         axes[n].set_title(f'FFT {mode}')
         axes[n].set_ylabel('Intensity')
         axes[n].set_xlabel('Frequency PHz')
-        axes[n].legend(loc='upper right');
+        axes[n].legend(loc='upper right')
     
 
     else:
