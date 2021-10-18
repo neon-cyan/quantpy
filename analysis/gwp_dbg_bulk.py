@@ -82,7 +82,7 @@ else:
         BPS.append([a,b])
 
 if nms is not None:
-    print(f'Plotting up normal modes {nms}')
+    print('Plotting up normal modes {}'.format([i+1 for i in nms]))
     plotnms(basepath, manifest, nms)
 if BPS is not None:
     print('Plotting up bond lengths {}'.format([f'{i[0]} - {i[1]}' for i in BPS]))
