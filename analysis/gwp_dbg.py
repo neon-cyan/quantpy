@@ -192,7 +192,7 @@ def plotbl(basepath, manifest):
     ax.set_ylabel('Bond length (Å)')
     ax.set_xlabel('Time (fs)')
     ax.legend(loc='upper right')
-    fig.savefig(os.path.join(basepath, f'dbg_ci_gwp{gwp+1}.png'))
+    fig.savefig(os.path.join(basepath, f'dbg_bl_gwp{gwp+1}.png'))
     plt.show()
 
 if len(sys.argv) < 3:
