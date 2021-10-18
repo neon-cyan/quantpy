@@ -71,12 +71,19 @@ except:
     print('Unable to open manifest!')
     sys.exit(-1)
 
-nms = [int(i)-1 for i in nms.split(',')]
-BPS = []
-for x in bls.split(','):
-    a, b = [int(z) for z in x.split('-')]
-    BPS.append([a,b])
-print(f'Plotting up normal modes {nms}')
-plotnms(basepath, manifest, nms)
-print('Plotting up bond lengths {}'.format([f'{i[0]} - {i[1]}' for i in BPS]))
-plotbl(basepath, manifest,BPS)
+if nms == 'None': nms = None
+else: nms = [int(i)-1 for i in nms.split(',')]
+
+if bls == 'None' : BPS = None
+else:
+    BPS = []
+    for x in bls.split(','):
+        a, b = [int(z) for z in x.split('-')]
+        BPS.append([a,b])
+
+if nms is not None:
+    print(f'Plotting up normal modes {nms}')
+    plotnms(basepath, manifest, nms)
+if BPS is not None:
+    print('Plotting up bond lengths {}'.format([f'{i[0]} - {i[1]}' for i in BPS]))
+    plotbl(basepath, manifest,BPS)
