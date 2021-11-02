@@ -21,20 +21,20 @@ parser.add_argument('--steps', default='A',
 
 #TODO MANIFEST
 
-parser.add_argument('--tasks', type=str, nargs='*', default=['nm', 'ci', 'csf', 'mq', 'sd', 'xyz'],
+parser.add_argument('--tasks', type=str, nargs='*', default=['nm', 'ci', 'csf', 'mq', 'sd', 'xyz', 'maxf', 'casde', 'nucde'],
                     help='''Things to extract. Options are
-                    nm    = normal modes
-                    xyz   = average geometeries 
-                    ci    = adiabatic states
-                    csf   = diabatic states
-                    mq    = mulliken charges (H summed into HAs)
-                    sd    = spin density (H summed into HAs)
+                    nm    = normal modes*
+                    xyz   = average geometeries*
+                    ci    = adiabatic states*
+                    csf   = diabatic states*
+                    mq    = mulliken charges (H summed into HAs)*
+                    sd    = spin density (H summed into HAs)*
                     dp    = dipole [WIP]
                     fo    = forces
-                    maxf  = maxforce
-                    casde = CASSCF (gaussian) DE
-                    nucde = Nuclear (quantics) DE #NYI
-                    [defaults to nm, ci, csf, mq, sd, xyz]''')
+                    maxf  = maxforce*
+                    casde = CASSCF (gaussian) DE*
+                    nucde = Nuclear (quantics) DE*
+                    defaults marked with a *''')
 
 parser.add_argument('--redo', dest='redo', action='store_true',
                     help='Ignore the extraction manifest (if it exists) [defaults to false]')
@@ -102,6 +102,7 @@ if manifest != None:
     try: assert(nsteps == manifest['steps'])
     except: raise Exception('Conflicting step numbers in script/manifest! Run with --redo to rebuild')
 else: manifest = {'steps' : nsteps}
+manifest['tout']= q_inp_data['tout']
 
 print(f'LOGALL files parsed')
 
@@ -175,7 +176,7 @@ for task in args.tasks:
         adiabats = data_gwpx['adiabats'].transpose(2,1,0)
         adiabats_ave = weightscale_sq(adiabats, gwp_sf, nsteps)
         with open(os.path.join(OUTDIR, 'ci'), 'wb') as f:
-            np.save(f, adiabats)
+            np.save(f, adiabats.T)
         with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
             np.save(f, adiabats_ave)
         manifest['quantities'].append('ci')
@@ -184,7 +185,7 @@ for task in args.tasks:
         diabats = data_gwpx['diabats'].transpose(2,1,0)
         diabats_ave = weightscale_sq(diabats, gwp_sf, nsteps)
         with open(os.path.join(OUTDIR, 'csf'), 'wb') as f:
-            np.save(f, diabats)
+            np.save(f, diabats.T)
         with open(os.path.join(OUTDIR, 'csf_ave'), 'wb') as f:
             np.save(f, diabats_ave)
         manifest['quantities'].append('csf')
@@ -214,7 +215,7 @@ for task in args.tasks:
         with open(os.path.join(OUTDIR, 'nm_ave'), 'wb') as f:
             np.save(f, res)
         with open(os.path.join(OUTDIR, 'nm'), 'wb') as f:
-            np.save(f, nmdata.transpose([2,0,1]))
+            np.save(f, nmdata.transpose([1,0,2]))
         manifest['quantities'].append('nm')
 
     elif task=='xyz':
