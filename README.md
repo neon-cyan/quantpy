@@ -27,14 +27,18 @@ Read the analysis script help with
 python3 extract.py --h
 ```
 
-### Visulatations
+### Visualisations
 These scripts are found in analysis folder
 
 - pairplot_sd_mq - Plots up all the spin densities (or mulliken charges) in pairs
-- plotter - *new* all in one plotter. Plot up a range a properties
+- plotter - All in one plotter. Plot up a range a properties
+- gwp_dbg - per-GWP analysis tool to identify problem GWPs & inspect
+- to_xyz - Generate a trajectory xyz file for VMD
 
 ## TODO
 Missing a few things from old scripts - these are all on the todo list:
-- [ANALYSIS] Single GWP analysis
+
+- [GWPDBG] Missing some of the single-GWP analysis (DiAangle / Etot / Eall / SpinDens / MaxF to NM)
+- [GWPDBG] Like to refactor bulk per-GWP plotter into single one
 - [PLOTTER] Plot up dipoles. Hopefully coord system is OK
-- [ANALYSIS] New debugging plot suite? CAS DE / MaxForce / CAS Energy (with hints?)
+- [PLOTTER] Plot up Hole Survival Probability
