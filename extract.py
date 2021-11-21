@@ -210,8 +210,14 @@ for task in args.tasks:
         manifest['quantities'].append('sd')
         manifest['spindenmap'] = data_gwpx['spindenmap']
 
-    # Nortmal mode & ave geom have seperate logic (see above)
+    # Nortmal mode & ave geom have seperate pre-logic (see above)
     elif task=='nm':
+        # Save the matrices xyz->nm and nm->xyz
+        with open(os.path.join(OUTDIR, 'nm2xyz'), 'wb') as f:
+            np.save(f, nm2xyz)
+        with open(os.path.join(OUTDIR, 'xyz2nm'), 'wb') as f:
+            np.save(f, xyz2nm)
+        # Save the per-gwp normal mode data
         with open(os.path.join(OUTDIR, 'nm_ave'), 'wb') as f:
             np.save(f, res)
         with open(os.path.join(OUTDIR, 'nm'), 'wb') as f:
@@ -238,6 +244,11 @@ for task in args.tasks:
         with open(os.path.join(OUTDIR, 'dps_ave'), 'wb') as f:
             np.save(f, dps_ave) # Save scaled scalars
         manifest['quantities'].append('dp')
+
+    elif task=='fo':
+        with open(os.path.join(OUTDIR, 'forces'), 'wb') as f:
+            np.save(f, data_gwpx['forces'])
+        manifest['quantities'].append('forces')
 
     elif task=='casde':
         with open(os.path.join(OUTDIR, 'casde'), 'wb') as f:

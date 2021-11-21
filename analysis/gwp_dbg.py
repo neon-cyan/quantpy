@@ -195,16 +195,46 @@ def plotbl(basepath, manifest):
     fig.savefig(os.path.join(basepath, f'dbg_bl_gwp{gwp+1}.png'))
     plt.show()
 
+def plotfnm(basepath, manifest):
+    assert('nm' in manifest['quantities'])
+    assert('forces' in manifest['quantities'])
+
+    print('Which GWP to plot?')
+    gwp = input()
+    gwp = int(gwp)-1
+    print('Which NMs to plot? Give a comma seperated list')
+    nms = input()
+    nms = [int(i)-1 for i in nms.split(',')]
+
+    raw_data = np.load(os.path.join(basepath, 'forces'))[gwp]
+    xyz2nm = np.load(os.path.join(basepath, 'xyz2nm'))
+    times = np.load(os.path.join(basepath, 'times'))
+    fig, ax = plt.subplots()
+
+    for a in nms:
+        dp = []
+        xyz_nma = xyz2nm[a]
+        for b in range(raw_data.shape[0]):
+            dp.append(xyz_nma.dot(raw_data[b].reshape(xyz_nma.shape)))
+        ax.plot(times, dp, label=f'NM{a+1}')
+    ax.set_title(f'Gradient in terms of normal modes (for GWP{gwp+1})')
+    ax.set_ylabel('Gradient as normal mode')
+    ax.set_xlabel('Time (fs)')
+    ax.legend(loc='upper right')
+    fig.savefig(os.path.join(basepath, f'dbg_pfnm_gwp{gwp+1}.png'))
+    plt.show()
+
 if len(sys.argv) < 3:
     print(f'Use {sys.argv[0]} path/to/manifest.json task')
     print('''Availble tasks:
     qs = QuickSearch help identify problem GWPs
-    pforce = Plot Gradient (Force)
+    pforce = Plot Max Gradient (Force)
     pcasde = Plot CASSCF Convergence [GWP-wise]
     pnm = Plot normal modes [GWP-wise]
     pcsf = Plot csf populations [GWP-wise]
     pci = Plot ci populations [GWP-wise]
     pbl = Plot bond lengths [GWP-wise]
+    pfnm = Plot gradient in normal modes
     ''')
     sys.exit(-1)
 
@@ -225,3 +255,4 @@ if task=='pnm' : plotnms(basepath, manifest)
 if task=='pcsf' : plotcsf(basepath, manifest)
 if task=='pci' : plotci(basepath, manifest)
 if task=='pbl' : plotbl(basepath, manifest)
+if task=='pfnm' : plotfnm(basepath, manifest)

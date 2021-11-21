@@ -1,8 +1,32 @@
 import unittest
 from glogpy.freqency_job import frequency_job as fj
 from glogpy.dynamics_job import dynamics_job as dj
+from glogpy.job import gaussian_job
 
 class TestJobs(unittest.TestCase):
+
+    # PART I : Test on a few different of different jobs
+
+    def test_aim_irc(self):
+        with open('glogpy/tests/ircaim.log', 'r') as f:
+            data = f.read()
+        gaussian_job(data)
+
+    def test_isop_dft(self):
+        with open('glogpy/tests/isop.log', 'r') as f:
+            data = f.read()
+        gaussian_job(data)
+
+    # PART II : Test frequency parser
+
+    def test_freq_job_o2_nosymm(self):
+        with open('glogpy/tests/o2_freq.log', 'r') as f:
+            data = f.read()
+        gj = fj(data)
+        ans = gj.parse()
+        self.assertEqual(ans['vibsyms'][0],'A')
+        self.assertDictEqual(ans['atomnos'],{1: 8, 2: 8})
+        self.assertEqual(ans['vibfreqs'][0],1643.2361)
 
     def test_freq_job_gly_nosymm(self):
         with open('glogpy/tests/gly_freq_nosymm.log', 'r') as f:
@@ -31,6 +55,8 @@ class TestJobs(unittest.TestCase):
         self.assertEqual(ans['vibfreqs'][0],415.5995)
         self.assertEqual(ans['vibfreqs'][-1],3231.3848)
 
+    # TEST III : Test a dynamics job
+
     def test_gly_dynamics(self):
         with open('glogpy/tests/qdyn_gly.log', 'r') as f:
             data = f.read()
@@ -38,7 +64,8 @@ class TestJobs(unittest.TestCase):
         ans = gj.parse()
 
         self.assertDictEqual(ans['atomnos'],{1: 6, 2: 8, 3: 8, 4: 6, 5: 7, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1})
-        print(ans)
+        #(ans)
+
     def test_allene_dynamics(self):
         with open('glogpy/tests/qdyn_allene.log', 'r') as f:
             data = f.read()

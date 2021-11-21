@@ -4,7 +4,7 @@ from glogpy.linkparser import linkparsers
 
 # This is a parser for gaussian log files.
 # The goal is to offer a linkwise parsing of jobs
-# Sooport of iops in each link is theoretically possible
+# Support of iops in each link is theoretically possible - but, as of yet, not implemented
 
 
 class link(): # The link class contains both the definition and textual output
@@ -111,28 +111,4 @@ class gaussian_job():
 
     def parse():
         raise Exception("Attempted to parse a generic job - need to define a inherited class!")
-
-if __name__ == "__main__":
-    with open('tests/qdyn_allene.log', 'r') as f:
-        data = f.read()
-    gj = gaussian_job(data)
-    gj.prettyprint() 
-
-
-    with open('tests/ircaim.log', 'r') as f:
-        data = f.read()
-    data = data.split('\n Initial command:')[1:]
-    [gaussian_job(i) for i in data]
-
-
-    with open('tests/freq.log', 'r') as f:
-        data = f.read()
-    gj = gaussian_job(data)
-    gj.prettyprint() 
-    for x in gj.link_list:
-        if x.number == 202 : 
-            print(x.iops)
-            ans = linkparsers.L202(x.text)
-            print(ans)
-        if x.number == 716 : print(linkparsers.L716(x.text, len(ans[0])))
         
