@@ -18,11 +18,11 @@ if len(sys.argv) < 5:
     => [SD=A|1,2]
     => [MQ=A|1,2]
     => [HM=sd|mq:atom_num:nbins:min_y:max_y]
-    => [FFT=cd|mq|csf:CHOP:[START:END]|A:1,2,3|A]
+    => [FFT=cd|mq|csf:Cutoff:1,2,3|A:limxmin,limxmax]
     [width/panel, height]
     [Output x11 | filename.png]
     """)
-    sys.exit(-1)
+    sys.exit(0)
 
 ATOMICLABELS = ['H',  'He',  'Li',  'Be',  'B',  'C',  'N',  'O',  'F',  'Ne',  'Na',  'Mg',  'Al',  'Si',  'P',  'S', 
     'Cl',  'Ar',  'K',  'Ca',  'Sc',  'Ti',  'V',  'Cr',  'Mn',  'Fe',  'Co',  'Ni',  'Cu',  'Zn',  'Ga',  'Ge',  'As',  'Se',  
@@ -131,7 +131,7 @@ for n, c in enumerate(commands):
         for a in BPS:
             dp = []
             for x in range(nsteps):
-                dp.append(mathutils.MathUtils.bond_angle(avegeom[x, a[0]-1],avegeom[x, a[1]-1], avegeom[x, a[2]-1] ))
+                dp.append(mathutils.MathUtils.bond_angle(avegeom[x, a[0]-1],avegeom[x, a[1]-1], avegeom[x, a[2]-1], mode='deg'))
 
             try: alab1 = ATOMICLABELS[manifest['atomnos'][str(a[0])]-1]
             except: alab1 = '?'
@@ -141,7 +141,7 @@ for n, c in enumerate(commands):
             except: alab3 = '?'
 
             axes[n].plot(times, dp, label=f'{alab1}[{a[0]}] - {alab2}[{a[1]}] - {alab3}[{a[2]}]')
-        axes[n].set_ylabel('Bond angle (rad)')
+        axes[n].set_ylabel('Bond angle (deg)')
         axes[n].set_title('Bond angle')
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
@@ -341,10 +341,17 @@ for n, c in enumerate(commands):
 
     # FFT
     elif cmd == 'FFT':
-        # [FFT=cd|mq|csf:CHOP:[START-END]|A]
-        mode, CHOP, RANGE, selector = ins.split(':')
+        # [FFT=cd|mq|csf:Cutoff:1,2,3|A:limxmin,limxmax]
+        mode, CHOP, selector, lims = ins.split(':')
         CHOP=int(CHOP)
+        if lims == 'None' : lims = None
+        else: lims = [float(x) * 1E15 for x in lims.split(',')]
         selector = None if selector == 'A' else [int(i) for i in selector.split(',')]
+
+        doPhase=False
+        if mode.endswith('+') : 
+            doPhase=True
+            mode=mode.split('+')[0]
 
         if mode == 'csf':  data = diabats
         elif mode == 'mq': data = mq
@@ -354,17 +361,10 @@ for n, c in enumerate(commands):
         print(data.shape, len(times))
         assert(data.shape[1] == len(times)) # Make sure extract worked
 
-        if RANGE != 'A':
-            s_idx, e_idx = [int(i) for i in RANGE.split('-')]
-            times_fft = times[s_idx:e_idx]
-            data_fft  = data.T[s_idx:e_idx].T
-        else:
-            times_fft = times
-            data_fft  = data
+        data_fft  = data
 
         # Do FFT and plot up
         N = data_fft.shape[1]
-        fig =  plt.figure(num=manifest_path, figsize=(20.0, 15.0))
 
         for i in range(data_fft.shape[0]):
             if mode=='csf': # CSFs are picked by index
@@ -372,9 +372,14 @@ for n, c in enumerate(commands):
                 elif i+1 not in selector: continue
 
             ft = np.fft.fft(data_fft[i])
-            ft = ft.real**2 + ft.imag**2
-            freq = np.fft.fftfreq(N, d=times_fft[1]-times_fft[0])
+            magnitude = np.abs(ft)
+            if doPhase:
+                phase = np.angle(ft)
+                combined = magnitude * -np.sign(phase) # Minus as most freq will be -ve => visual clarity
+            else:
+                 combined = magnitude
 
+            freq = np.fft.fftfreq(N, d=times[1]*1E-15-times[0]*1E-15)
             if mode == 'sd' or mode == 'mq': # SD/MQ are picked based on atom number
                 if mode == 'sd' : atom_number = manifest['spindenmap'][i]
                 else : atom_number = manifest['mullikenmap'][i]
@@ -390,12 +395,15 @@ for n, c in enumerate(commands):
                 label = f'CSF {i+1}'
                 colour = get_nth_col(i)
 
-            axes[n].plot(freq[CHOP:int(N/2)], ft[CHOP:int(N/2)], label=label, color=colour)
+            axes[n].plot(freq[CHOP:int(N/2)], combined[CHOP:int(N/2)], label=label, color=colour)
         axes[n].set_title(f'FFT {mode}')
         axes[n].set_ylabel('Intensity')
-        axes[n].set_xlabel('Frequency PHz')
+        axes[n].set_xlabel('Frequency Hz')
         axes[n].legend(loc='upper right')
-    
+        axes[n].axhline(y=0, color="black", linestyle="--")
+
+        if lims != None:
+            axes[n].axis(xmin = lims[0], xmax = lims[1])
 
     else:
         raise Exception(f'Illegal mode {cmd}')
