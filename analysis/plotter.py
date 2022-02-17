@@ -266,6 +266,24 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
+    elif cmd == 'AVSD':
+        csfs, av_window = ins.split(':')
+        av_window = int(av_window)
+        SDS = None if csfs=='A' else [int(i) for i in csfs.split(',')]
+        for i in range(len(manifest['spindenmap'])):
+            atom_number = manifest['spindenmap'][i]
+            if SDS == None : pass
+            elif atom_number not in SDS: continue
+            
+            try: symbol = ATOMICLABELS[manifest['atomnos'][str(atom_number)]-1]
+            except: symbol = '?'
+            mav = mathutils.MathUtils.moving_avg(sd[i], av_window)
+            axes[n].plot(times[:len(mav)], mav, label='{} [{}]'.format(symbol, atom_number), color=get_nth_col(atom_number))
+        axes[n].set_title(f'{av_window}-point moving average spin density (H Summed)')
+        axes[n].set_ylabel('Spin density')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right')
+
     elif cmd == 'MQ':
         MQS = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(len(manifest['mullikenmap'])):
