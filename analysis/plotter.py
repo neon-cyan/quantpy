@@ -359,7 +359,7 @@ for n, c in enumerate(commands):
 
     # FFT
     elif cmd == 'FFT':
-        # [FFT=cd|mq|csf:Cutoff:1,2,3|A:limxmin,limxmax]
+        # [FFT=cd|mq|csf(+ Do Phase Correction | - Do cos correction | 2 Power spectra):Cutoff:1,2,3|A:limxmin,limxmax]
         mode, CHOP, selector, lims = ins.split(':')
         CHOP=int(CHOP)
         if lims == 'None' : lims = None
@@ -367,16 +367,26 @@ for n, c in enumerate(commands):
         selector = None if selector == 'A' else [int(i) for i in selector.split(',')]
 
         doPhase=False
-        if mode.endswith('+') : 
+        if '+' in mode : 
             doPhase=True
-            mode=mode.split('+')[0]
+            mode=mode.replace('+', '')
+
+        doCosCorrect=False
+        if '-' in mode : 
+            doCosCorrect=True
+            mode=mode.replace('-', '')
+
+        doPowerSpectra=False
+        if '2' in mode : 
+            doPowerSpectra=True
+            mode=mode.replace('2', '')
 
         if mode == 'csf':  data = diabats
         elif mode == 'mq': data = mq
         elif mode == 'sd': data = sd
         else: raise Exception('Illegal FFT mode')
 
-        print(data.shape, len(times))
+        # print(data.shape, len(times))
         assert(data.shape[1] == len(times)) # Make sure extract worked
 
         data_fft  = data
@@ -389,8 +399,16 @@ for n, c in enumerate(commands):
                 if selector == None : pass
                 elif i+1 not in selector: continue
 
-            ft = np.fft.fft(data_fft[i])
+            data = data_fft[i]
+            if doCosCorrect:
+                #print(data)
+                cosarray = [np.sin(np.pi * j / times[-1]) for j in times] # YES SINE
+                data = data * cosarray
+                #print(cosarray)
+            ft = np.fft.fft(data)
             magnitude = np.abs(ft)
+            if doPowerSpectra:
+                magnitude = magnitude * magnitude
             if doPhase:
                 phase = np.angle(ft)
                 combined = magnitude * -np.sign(phase) # Minus as most freq will be -ve => visual clarity
