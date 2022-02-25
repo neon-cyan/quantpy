@@ -359,7 +359,7 @@ for n, c in enumerate(commands):
 
     # FFT
     elif cmd == 'FFT':
-        # [FFT=cd|mq|csf:Cutoff:1,2,3|A:limxmin,limxmax]
+        # [FFT=cd|mq|csf(+ Do Phase Correction | - Do cos correction | 2 Power spectra):Cutoff:1,2,3|A:limxmin,limxmax]
         mode, CHOP, selector, lims = ins.split(':')
         CHOP=int(CHOP)
         if lims == 'None' : lims = None
@@ -367,16 +367,26 @@ for n, c in enumerate(commands):
         selector = None if selector == 'A' else [int(i) for i in selector.split(',')]
 
         doPhase=False
-        if mode.endswith('+') : 
+        if '+' in mode : 
             doPhase=True
-            mode=mode.split('+')[0]
+            mode=mode.replace('+', '')
+
+        doCosCorrect=False
+        if '-' in mode : 
+            doCosCorrect=True
+            mode=mode.replace('-', '')
+
+        doPowerSpectra=False
+        if '2' in mode : 
+            doPowerSpectra=True
+            mode=mode.replace('2', '')
 
         if mode == 'csf':  data = diabats
         elif mode == 'mq': data = mq
         elif mode == 'sd': data = sd
         else: raise Exception('Illegal FFT mode')
 
-        print(data.shape, len(times))
+        # print(data.shape, len(times))
         assert(data.shape[1] == len(times)) # Make sure extract worked
 
         data_fft  = data
@@ -391,11 +401,16 @@ for n, c in enumerate(commands):
 
             ft = np.fft.fft(data_fft[i])
             magnitude = np.abs(ft)
+            if doPowerSpectra:
+                magnitude = magnitude * magnitude
             if doPhase:
                 phase = np.angle(ft)
                 combined = magnitude * -np.sign(phase) # Minus as most freq will be -ve => visual clarity
             else:
                  combined = magnitude
+
+            if doCosCorrect:
+                combined = combined * np.array([np.cos(2 * j-times[-1]) / times[-1] for j in times])
 
             freq = np.fft.fftfreq(N, d=times[1]*1E-15-times[0]*1E-15)
             if mode == 'sd' or mode == 'mq': # SD/MQ are picked based on atom number
