@@ -401,10 +401,8 @@ for n, c in enumerate(commands):
 
             data = data_fft[i]
             if doCosCorrect:
-                #print(data)
-                cosarray = [np.sin(np.pi * j / times[-1]) for j in times] # YES SINE
-                data = data * cosarray
-                #print(cosarray)
+                scalearray = [np.sin(np.pi * j / times[-1]) for j in times] # YES SINE
+                data = data * scalearray
             ft = np.fft.fft(data)
             magnitude = np.abs(ft)
             if doPowerSpectra:
