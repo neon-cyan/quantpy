@@ -381,6 +381,12 @@ for n, c in enumerate(commands):
             doPowerSpectra=True
             mode=mode.replace('2', '')
 
+        # Do a phase plot
+        phase_mode =False
+        if 'p' in mode : 
+            phase_mode=True
+            mode=mode.replace('p', '')
+
         if mode == 'csf':  data = diabats
         elif mode == 'mq': data = mq
         elif mode == 'sd': data = sd
@@ -391,30 +397,18 @@ for n, c in enumerate(commands):
 
         data_fft  = data
 
-        # Do FFT and plot up
         N = data_fft.shape[1]
-
+        freq = np.fft.fftfreq(N, d=times[1]*1E-15-times[0]*1E-15)[CHOP:int(N/2)]
+        fftdata = {}
+        colourdata = {}
         for i in range(data_fft.shape[0]):
             if mode=='csf': # CSFs are picked by index
                 if selector == None : pass
                 elif i+1 not in selector: continue
-
-            data = data_fft[i]
-            if doCosCorrect:
-                scalearray = [np.sin(np.pi * j / times[-1]) for j in times] # YES SINE
-                data = data * scalearray
-            ft = np.fft.fft(data)
-            magnitude = np.abs(ft)
-            if doPowerSpectra:
-                magnitude = magnitude * magnitude
-            if doPhase:
-                phase = np.angle(ft)
-                combined = magnitude * -np.sign(phase) # Minus as most freq will be -ve => visual clarity
-            else:
-                 combined = magnitude
-
-            freq = np.fft.fftfreq(N, d=times[1]*1E-15-times[0]*1E-15)
-            if mode == 'sd' or mode == 'mq': # SD/MQ are picked based on atom number
+                label = f'CSF {i+1}'
+                colour = get_nth_col(i)
+            
+            elif mode == 'sd' or mode == 'mq': # SD/MQ are picked based on atom number
                 if mode == 'sd' : atom_number = manifest['spindenmap'][i]
                 else : atom_number = manifest['mullikenmap'][i]
                 
@@ -425,14 +419,41 @@ for n, c in enumerate(commands):
                 except: symbol = '?'
                 label = f'{symbol}[{atom_number}]'
                 colour = get_nth_col(atom_number)
-            else: 
-                label = f'CSF {i+1}'
-                colour = get_nth_col(i)
+            else:
+                raise Exception("Illegal FFT Mode")
 
-            axes[n].plot(freq[CHOP:int(N/2)], combined[CHOP:int(N/2)], label=label, color=colour)
-        axes[n].set_title(f'FFT {mode}')
-        axes[n].set_ylabel('Intensity')
-        axes[n].set_xlabel('Frequency Hz')
+            data = data_fft[i]
+            if doCosCorrect:
+                scalearray = [np.sin(np.pi * j / times[-1]) for j in times] # YES SINE
+                data = data * scalearray
+            ft = np.fft.fft(data)
+            fftdata[label] = ft
+            colourdata[label] = colour
+
+        if phase_mode:
+            from itertools import combinations
+            for i, j in combinations(fftdata.keys(), 2):
+                phases = np.abs(np.angle(fftdata[i] / fftdata[j]))
+                axes[n].plot(freq, phases[CHOP:int(N/2)], label=f'{i} - {j}')
+            axes[n].set_title(f'FFT Phases {mode}')
+            axes[n].set_ylabel('Relative phases (rad)')
+            axes[n].set_xlabel('Frequency Hz')
+            axes[n].axhline(y=np.pi, color="black", linestyle="--")
+
+        else:
+            for k, v in fftdata.items():
+                magnitude = np.abs(v)
+                if doPowerSpectra:
+                    magnitude = magnitude * magnitude
+                if doPhase:
+                    phase = np.angle(v)
+                    combined = magnitude * -np.sign(phase) # Minus as most freq will be -ve => visual clarity
+                else:
+                    combined = magnitude
+                axes[n].plot(freq, combined[CHOP:int(N/2)], label=k, color=colourdata[k])
+            axes[n].set_title(f'FFT {mode}')
+            axes[n].set_ylabel('Intensity')
+            axes[n].set_xlabel('Frequency Hz')
         axes[n].legend(loc='upper right')
         axes[n].axhline(y=0, color="black", linestyle="--")
 
