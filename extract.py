@@ -103,6 +103,7 @@ if manifest != None:
     except: raise Exception('Conflicting step numbers in script/manifest! Run with --redo to rebuild')
 else: manifest = {'steps' : nsteps}
 manifest['tout']= q_inp_data['tout']
+manifest['method']= q_inp_data['queh']
 
 print(f'LOGALL files parsed')
 

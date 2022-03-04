@@ -3,7 +3,101 @@ import numpy as np
 # The link parsers are designed to be as simple as possible
 # All processing logic ought to be handled elsewhere
 
+# TODO -> Move these into a link class with a .parse() method
+
 class linkparsers():
+    def L118(txt):
+        # Step one - split the block into TRJ-TRJ-TRJ sections
+        trjlines = []
+        for i, ln in enumerate(txt):
+            if 'TRJ-TRJ-TRJ' in ln:
+                trjlines.append(i)
+        assert(len(trjlines) % 2 == 0)
+        # print(trjlines)
+        if len(trjlines) == 2 : trjlines = [trjlines]
+        else: trjlines = np.reshape(trjlines, (2, int(len(trjlines)/2)))
+        # print(trjlines)
+        # Step 2 : loop over the L118 TRJ blocks
+        l118_steps = []
+        for s, e in trjlines:
+            # print(s,e)
+            d = {}
+            # Define 3 types of L118 block (Input / Startpoint / Iterative)
+            if True in map(lambda x : 'INPUT DATA FOR L118' in x, txt[s:e]): d['type'] = 'Input'
+            elif True in map(lambda x : 'Start new trajectory calculation' in x, txt[s:e]): d['type'] = 'Start'
+            else: d['type'] = 'Iter'
+
+            # Next step is to loop through and pull out the relevant information
+            for i, ln in enumerate(txt[s:e]):
+                if 'Trajectory Number' in ln:
+                    # Parse lines of form
+                    # Trajectory Number     1    Step Number     2
+                    d['traj'], d['step'] = (int(x) for x in ln.replace('Trajectory Number', '').split('Step Number'))
+
+                elif 'Time (fs)' in ln and 'Trajectory summary' not in txt[s:e][i-1]:
+                    # Parse lines of form
+                    # Time (fs)     0.139113
+                    d['time'] = float(ln.replace('Time (fs)',''))
+
+                elif 'EKin' in ln:
+                    # Parse lines of form
+                    # EKin =  0.0; EPot =    -1.7; ETot =    -1.7 A.U.
+                    d['ekin'], d['epot'], d['etot'] = (float(k.split('=')[1]) for k in ln.rstrip('A.U.').split(';'))
+
+                elif 'Total energy' in ln:
+                    # Parse lines of form
+                    # Total energy  -1.137304D+02 A.U.
+                    # Total energy  -1.137304D+02  Delta-E   0.000000D+00 A.U.                    
+                    if 'Delta-E' in ln:
+                        te, de = ln.rstrip('A.U.').replace('Total energy','').split('Delta-E')
+                        pnum, ppow = (float(j) for j in te.split('D'))
+                        d['etot2'] = pnum * pow(10, ppow)
+                        pnum, ppow = (float(j) for j in de.split('D'))
+                        d['de2'] = pnum * pow(10, ppow)
+                    else:
+                        pnum, ppow = ln.rstrip('A.U.').replace('Total energy','').split('D')
+                        d['etot2'] = float(pnum) * pow(10, int(ppow))
+
+
+                elif 'Total angular momentum' in ln:
+                    # Parse lines of form
+                    # Total angular momentum   0.000000D+00 h-bar
+                    # Total angular momentum   9.601915D-15  Delta-A  -6.606302D-18 h-bar
+                    if 'Delta-A' in ln:
+                        te, de = ln.rstrip('h-bar').replace('Total angular momentum','').split('Delta-A')
+                        pnum, ppow = (float(j) for j in te.split('D'))
+                        d['angmomtot'] = float(pnum) * pow(10, int(ppow))
+                        pnum, ppow = (float(j) for j in de.split('D'))
+                        d['dangmomtot'] = float(pnum) * pow(10, int(ppow))                        
+                    else:
+                        pnum, ppow = ln.rstrip('h-bar').replace('Total angular momentum','').split('D')
+                        d['angmomtot'] = float(pnum) * pow(10, int(ppow))
+
+                elif 'Cartesian coordinates: (bohr)' in ln:
+                    # Parse block of form
+                    # Cartesian coordinates: (bohr)
+                    # I=    1 X=   2.050651524812D-04 Y=   1.252053407470D+00 Z=   0.000000000000D+00
+                    # I=    2 X=   1.792736905953D+00 Y=   2.196753953306D+00 Z=   0.000000000000D+00
+                    # I=    3 X=  -1.792014970837D+00 Y=   2.197343547857D+00 Z=   0.000000000000D+00
+                    # I=    4 X=  -1.993362381758D-04 Y=  -1.216206700952D+00 Z=   0.000000000000D+00
+                    atomdict = {}
+                    for atomln in txt[s:e][i+1:]:
+                        if 'I=' in atomln:
+                            _, label, _, x, _, y, _, z = atomln.split()
+                            pnum, ppow = x.split('D')
+                            x = float(pnum) * pow(10, int(ppow))
+                            
+                            pnum, ppow = y.split('D')
+                            y = float(pnum) * pow(10, int(ppow))
+
+                            pnum, ppow = z.split('D')
+                            z = float(pnum) * pow(10, int(ppow))
+                            atomdict[int(label)] = np.array([x,y,z]) * 0.52918 # Convert Bohr -> Angstrom
+                        else: break 
+                    d['geom'] = atomdict
+            l118_steps.append(d)
+        return l118_steps
+
     def L202(txt):
         sep_ctr = 0
         atoms = {}
@@ -159,7 +253,7 @@ class linkparsers():
             'maxforce'    : float(maxf),
             'rmsforce'    : float(rmsf)
         })
-        return result # Immitiate the CCLIB format [https://cclib.github.io/data.html]
+        return result # Immitate the CCLIB format [https://cclib.github.io/data.html]
     
     def L601(txt, spin_dens = False, dipole=False):
         muliken = {}
@@ -173,35 +267,31 @@ class linkparsers():
             if ('Mulliken charges and spin densities:' in ln) and spin_dens:
                 # This is the unsummed table
                 for subln in txt[i + 2:]:
-                    if 'Sum' in subln : break
-                    # print(subln)
-                    atomnum, _, mq, sd = subln.split()
+                    try: atomnum, _, mq, sd = subln.split()
+                    except: break
                     muliken[int(atomnum)] = float(mq)
                     spin_den[int(atomnum)] = float(sd)
 
             elif ('Mulliken charges:' in ln) and not spin_dens:
                 # This is the unsummed table
                 for subln in txt[i + 2:]:
-                    if 'Sum' in subln : break
-                    # print(subln)
-                    atomnum, _, mq = subln.split()
+                    try: atomnum, _, mq = subln.split()
+                    except: break
                     muliken[int(atomnum)] = float(mq)
 
             elif (' Mulliken charges and spin densities with hydrogens summed into heavy atoms:' in ln) and spin_dens:
                 # This is the summed H->Heavy Atom table
                 for subln in txt[i + 2:]:
-                    if 'Electronic' in subln : break
-                    # print(subln)
-                    atomnum, _, mq, sd = subln.split()
+                    try: atomnum, _, mq, sd = subln.split()
+                    except: break
                     muliken_sum[int(atomnum)] = float(mq)
                     spin_den_sum[int(atomnum)] = float(sd)
 
             elif ('Mulliken charges with hydrogens summed into heavy atoms:' in ln) and not spin_dens:
                 # This is the unsummed table
                 for subln in txt[i + 2:]:
-                    if 'APT' in subln : break
-                    # print(subln)
-                    atomnum, _, mq = subln.split()
+                    try: atomnum, _, mq = subln.split()
+                    except: break
                     muliken_sum[int(atomnum)] = float(mq)
 
             elif ('Dipole moment' in ln) and dipole:
@@ -221,31 +311,53 @@ class linkparsers():
             result['dipole'] = dm
         return result
 
-    def L510_TD(txt):
-        diabats = {}    # Called CSFs
-        adiabats = {}   # Called CI states
-        energy = None
-        denergy = None
+    def L510_TD(txt, do_CI_States=False):
+        d = {}
         for i, ln in enumerate(txt):
             if 'ITN=  2 MaxIt=***' in ln:
                 en, de = ln.split(' E=')[1].split('DE=')
                 de = de.split('Acc=')[0]
                 denum, depow = de.split('D')
-                energy = float(en)
-                denergy= float(denum) * (10 ** int(depow))
+                d['case'] = float(en)
+                d['casde']= float(denum) * (10 ** int(depow))
+
             elif 'Current Time Dep wavefunction in basis of configuration state functions' in ln:
+                diabats = {}
                 for csf in txt[i+2:]:
                     try:
                         s, re, im = csf.split()
                         diabats[int(s)] = complex(float(re), float(im))
                     except Exception as e:
                         break
+                d['diabats'] = diabats
+
+            elif 'MCSCF vectors and energies' in ln and do_CI_States:
+                cies = {}
+                for nci in txt[i+2:]:
+                    try:
+                        s, e = nci.split()
+                        cies[int(s)] = float(e)
+                    except Exception as e:
+                        break
+                d['cies'] = cies
 
 
             elif 'Current Time Dep wavefunction in basis of ci state functions' in ln:
+                adiabats = {}
                 for cis in txt[i+2:]:
                     try:
                         s, re, im = cis.split()
                         adiabats[int(s)] = complex(float(re), float(im))
-                    except Exception as e : break
-        return {'diabats' : diabats , 'adiabats' : adiabats, 'case' : energy, 'casde' : denergy}
+                    except Exception as e : 
+                        
+                        break
+                d['adiabats'] = adiabats    
+
+            elif  'Real A(t) energy is' in ln:
+                d['raenergy'] = float(ln.replace('Real A(t) energy is', ''))
+
+            elif  'A(t) energy is' in ln:
+                d['aenergy'] = float(ln.replace('A(t) energy is', ''))
+
+        # print(d)
+        return d

@@ -7,12 +7,14 @@ import json
 if len(sys.argv) < 5:
     print(f"""Not enough arguemnts!\n Use : {sys.argv[0]}
     [/path/manifest.json] 
+
     *** GEOMETRIC ***
     => [BL=1-2,2-3]
     => [PBL=1-2,2-3]
     => [NM=1,2,3]
     => [BA=1-2-3]
     => [DA=1-2-3-4]
+
     *** ELECTRONIC ***
     => [CIs=A|1,2,3]
     => [CSFs=A|1,2,3]
@@ -22,8 +24,9 @@ if len(sys.argv) < 5:
     => [SD=A|1,2]
     => [MQ=A|1,2]
     => [HM=sd|mq:atom_num:nbins:min_y:max_y]
-    *** FOURIER ***
-    => [FFT=cd|mq|csf:CHOP:1,2,3|A:[ZOOM_RANGE/None]]
+    
+    *** DISCRETE FOURIER TRANSFORMS ***
+    => [FFT=cd|mq|csf(+|-|p):CHOP:1,2,3|A:[ZOOM_RANGE/None]]
     [width/panel, height]
     [Output x11 | filename.png]
     """)
