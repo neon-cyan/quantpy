@@ -43,12 +43,6 @@ with open(manifest_path, 'r') as f:
 basepath = os.path.dirname(manifest_path)
 
 times = np.load(os.path.join(basepath, 'times'))
-nms = np.load(os.path.join(basepath, 'nm_ave'))
-diabats = np.load(os.path.join(basepath, 'csf_ave'))
-adiabats = np.load(os.path.join(basepath, 'ci_ave'))
-avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
-mq = np.load(os.path.join(basepath, 'mq_ave'))
-sd = np.load(os.path.join(basepath, 'sd_ave'))
 nsteps = manifest['steps']
 
 
@@ -67,6 +61,7 @@ fig, axes = plt.subplots(1, len(commands), num=manifest_path, figsize=(wpp * len
 if len(commands) == 1 : axes = [axes] # MPL messes with array if only one plot => Need to re-array
 
 for n, c in enumerate(commands):
+    avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
     cmd, ins = c.split('=')
     # GEOMETRICS
     if cmd == 'BL':
@@ -91,6 +86,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
     elif cmd == 'PBL':
+        avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
         BPS = []
         for x in ins.split(','):
             a, b = [int(z) for z in x.split('-')]
@@ -115,6 +111,7 @@ for n, c in enumerate(commands):
 
 
     elif cmd == 'NM':
+        nms = np.load(os.path.join(basepath, 'nm_ave'))
         for x in [int(i) for i in ins.split(',')]:
             axes[n].plot(times, nms[x-1], label=f'NM{x}', color=get_nth_col(x-1))
         axes[n].set_title('Normal mode evolution')
@@ -123,6 +120,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
     elif cmd == 'BA':
+        avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
         BPS = []
         for x in ins.split(','):
             a, b, c = [int(z) for z in x.split('-')]
@@ -147,6 +145,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
     elif cmd == 'DA':
+        avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
         BPS = []
         for x in ins.split(','):
             a, b, c, d = [int(z) for z in x.split('-')]
@@ -175,6 +174,7 @@ for n, c in enumerate(commands):
         
     # ELECTRONICS
     elif cmd == 'CIs':
+        adiabats = np.load(os.path.join(basepath, 'ci_ave'))
         CI_STATES = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(adiabats.shape[0]):
             if CI_STATES == None: pass
@@ -187,6 +187,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
     elif cmd == 'CSFs':
+        diabats = np.load(os.path.join(basepath, 'csf_ave'))
         CSF_STATES = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(diabats.shape[0]):
             if CSF_STATES == None: pass
@@ -199,6 +200,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
     elif cmd == 'CSFv':
+        diabats = np.load(os.path.join(basepath, 'csf_ave'))
         # Expect a list of label:1,1,0,0_label:0,0,1,1
         to_plot={}
         for i in ins.split('_'):
@@ -215,6 +217,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
     elif cmd == 'AVCSFs':
+        diabats = np.load(os.path.join(basepath, 'csf_ave'))
         csfs, av_window = ins.split(':')
         av_window = int(av_window)
         CSF_STATES = None if csfs=='A' else [int(i) for i in csfs.split(',')]
@@ -230,6 +233,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
     elif cmd == 'AVCSFv':
+        diabats = np.load(os.path.join(basepath, 'csf_ave'))
         # Expect format av_window_label:1,0,0_label:0,0,1
         av_window, *toplt = ins.split('_')
         av_window = int(av_window)
@@ -252,6 +256,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
     elif cmd == 'SD':
+        sd = np.load(os.path.join(basepath, 'sd_ave'))
         SDS = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(len(manifest['spindenmap'])):
             atom_number = manifest['spindenmap'][i]
@@ -267,6 +272,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
     elif cmd == 'MQ':
+        mq = np.load(os.path.join(basepath, 'mq_ave'))
         MQS = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(len(manifest['mullikenmap'])):
             atom_number = manifest['mullikenmap'][i]
@@ -346,9 +352,9 @@ for n, c in enumerate(commands):
         CHOP=int(CHOP)
         selector = None if selector == 'A' else [int(i) for i in selector.split(',')]
 
-        if mode == 'csf':  data = diabats
-        elif mode == 'mq': data = mq
-        elif mode == 'sd': data = sd
+        if mode == 'csf':  data = np.load(os.path.join(basepath, 'csf_ave'))
+        elif mode == 'mq': data = np.load(os.path.join(basepath, 'mq_ave'))
+        elif mode == 'sd': data = np.load(os.path.join(basepath, 'sd_ave'))
         else: raise Exception('Illegal FFT mode')
 
         print(data.shape, len(times))
