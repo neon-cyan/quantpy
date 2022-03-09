@@ -9,17 +9,15 @@ import numpy as np
 
 MANIFEST_NAME='manifest.json'
 
-parser = argparse.ArgumentParser(description='logall extractor')
+parser = argparse.ArgumentParser(description='QuEh logall extractor')
 parser.add_argument('qinp', type=str,
                     help='Path to quantics input file')
 
 parser.add_argument('--adir', type=str, default='analysis',
-                    help='Where to put the extracted data files [defaults to QINPDIR/analysis]')
+                    help='Name or path to directory where to put the extracted data files [defaults to QINPDIR/analysis]')
 
 parser.add_argument('--steps', default='A',
                     help='Number of steps to parse [defaults to all steps]')
-
-#TODO MANIFEST
 
 parser.add_argument('--tasks', type=str, nargs='*', default=['nm', 'ci', 'csf', 'mq', 'sd', 'xyz', 'maxf', 'casde', 'nucde'],
                     help='''Things to extract. Options are
@@ -103,6 +101,7 @@ if manifest != None:
     except: raise Exception('Conflicting step numbers in script/manifest! Run with --redo to rebuild')
 else: manifest = {'steps' : nsteps}
 manifest['tout']= q_inp_data['tout']
+manifest['method']= 'queh'
 
 print(f'LOGALL files parsed')
 

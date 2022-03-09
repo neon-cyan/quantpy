@@ -1,11 +1,11 @@
 import unittest
 from glogpy.freqency_job import frequency_job as fj
 from glogpy.dynamics_job import dynamics_job as dj
+from glogpy.l118_job import l118_job
 from glogpy.job import gaussian_job
 
 class TestJobs(unittest.TestCase):
-
-    # PART I : Test on a few different of different jobs
+    # PART I : Test on a few different generic odd jobs
 
     def test_aim_irc(self):
         with open('glogpy/tests/ircaim.log', 'r') as f:
@@ -55,7 +55,7 @@ class TestJobs(unittest.TestCase):
         self.assertEqual(ans['vibfreqs'][0],415.5995)
         self.assertEqual(ans['vibfreqs'][-1],3231.3848)
 
-    # TEST III : Test a dynamics job
+    # TEST III : Test a few QuEh dynamics jobs
 
     def test_gly_dynamics(self):
         with open('glogpy/tests/qdyn_gly.log', 'r') as f:
@@ -72,6 +72,22 @@ class TestJobs(unittest.TestCase):
         gj = dj(data)
         ans = gj.parse()
         self.assertDictEqual(ans['atomnos'],{1: 6, 2: 6, 3: 6, 4: 1, 5: 1, 6: 1, 7: 1})
+
+    # TEST IV : L118 test
+
+    def test_formaldehyde_l118(self):
+        with open('glogpy/tests/methanal_s1_ts.log', 'r') as f:
+            data = f.read()
+        data = data.split('Initial command:\n')[3]
+        gj = l118_job(data)
+        ans = gj.parse()
+
+    def test_isop_l118_spindens(self):
+        with open('glogpy/tests/isoprop_sd.log', 'r') as f:
+            data = f.read()
+        data = data.split('Initial command:\n')[3]
+        gj = l118_job(data)
+        ans = gj.parse(spin_dens=True)
 
 if __name__ == '__main__':
     unittest.main()
