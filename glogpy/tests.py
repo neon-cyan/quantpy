@@ -5,7 +5,7 @@ from glogpy.l118_job import l118_job
 from glogpy.job import gaussian_job
 
 class TestJobs(unittest.TestCase):
-    # PART I : Test on a few different jobs
+    # PART I : Test on a few different generic odd jobs
 
     def test_aim_irc(self):
         with open('glogpy/tests/ircaim.log', 'r') as f:

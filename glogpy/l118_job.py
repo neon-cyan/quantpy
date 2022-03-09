@@ -46,8 +46,8 @@ class l118_job(gaussian_job):
                 break
          
         if l202_init == None : raise Exception("[L118P] No link 202!")
-        geom_init = linkparsers.L202(l202_init.text) # Need this for atom labels
-        print(geom_init)
+        l202_init = linkparsers.L202(l202_init.text) # Need this for atom labels
+
         l510s = filter(lambda x: x.number==510, self.link_list)
         l510_init, *l510s = [linkparsers.L510_TD(x.text, do_CI_States=True) for x in list(l510s)]
         
@@ -59,6 +59,6 @@ class l118_job(gaussian_job):
         l601s = filter(lambda x: x.number==601, self.link_list)
         l601_init, *l601s = [linkparsers.L601(x.text, spin_dens) for x in list(l601s)[:-1]]
         assert(len(l510s) == len(l118s) == len(l601s)) # The number of in-loop links must be consistent
-        xn = [(l510_init, l118_init, l601_init)] + list(zip(l510s, l118s, l601s)) # Prepend the first step
+        xn = [(l510_init, [l118_init], l601_init)] + list(zip(l510s, l118s, l601s)) # Prepend the first step
 
-        return []
+        return (l202_init, xn)

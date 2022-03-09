@@ -26,6 +26,9 @@ class frequency_job(gaussian_job):
         except KeyError : pass
         
         geom = ans['geom'] if NoSymm else ans['geom_symm']
+        # Sometimes the keys are strored as strings - this is a quick fix
+        if 1 not in geom:
+            geom = {int(k) : v for k, v in geom.items()}
         proton_info = ans['proton_nums']
 
         res = None
