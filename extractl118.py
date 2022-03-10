@@ -56,7 +56,6 @@ else:
 
     # save CI pop
     adiabats = np.abs(np.array([mathutils.MathUtils.dict_to_list(i[0]['adiabats']) for i in xns])).T
-    print(adiabats)
     with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
         np.save(f, adiabats)
     manifest['quantities'].append('ci')
