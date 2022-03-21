@@ -146,6 +146,32 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
+    elif cmd == 'PBA':
+        BPS = []
+        for x in ins.split(','):
+            a, b, c = [int(z) for z in x.split('-')]
+            BPS.append([a,b,c])
+
+        for a in BPS:
+            dp = []
+            for x in range(nsteps):
+                dp.append(mathutils.MathUtils.bond_angle(avegeom[x, a[0]-1],avegeom[x, a[1]-1], avegeom[x, a[2]-1], mode='deg'))
+
+            try: alab1 = ATOMICLABELS[manifest['atomnos'][str(a[0])]-1]
+            except: alab1 = '?'
+            try: alab2 = ATOMICLABELS[manifest['atomnos'][str(a[1])]-1]
+            except: alab2 = '?'
+            try: alab3 = ATOMICLABELS[manifest['atomnos'][str(a[2])]-1]
+            except: alab3 = '?'
+            dp = np.array(dp)
+            dp0 = dp[0]
+            dpx = (dp-dp0)/dp0
+            axes[n].plot(times, dpx, label=f'{alab1}[{a[0]}] - {alab2}[{a[1]}] - {alab3}[{a[2]}]')
+        axes[n].set_title('Bond angles (fractional)')
+        axes[n].set_ylabel('Fractional change')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right')
+
     elif cmd == 'DA':
         BPS = []
         for x in ins.split(','):
@@ -367,6 +393,7 @@ for n, c in enumerate(commands):
         selector = None if selector == 'A' else [int(i) for i in selector.split(',')]
 
         doPhase=False
+        # Phase modulation is gone based on the sign of FT value
         if '+' in mode : 
             doPhase=True
             mode=mode.replace('+', '')
@@ -397,7 +424,11 @@ for n, c in enumerate(commands):
 
         data_fft  = data
 
-        N = data_fft.shape[1]
+        if doCosCorrect:
+            N = data_fft.shape[1] * 2
+        else:
+            N = data_fft.shape[1]
+
         freq = np.fft.fftfreq(N, d=times[1]*1E-15-times[0]*1E-15)[CHOP:int(N/2)]
         fftdata = {}
         colourdata = {}
@@ -424,8 +455,9 @@ for n, c in enumerate(commands):
 
             data = data_fft[i]
             if doCosCorrect:
-                scalearray = [np.sin(np.pi * j / times[-1]) for j in times] # YES SINE
+                scalearray = [np.cos(np.pi * j / (2 * times[-1])) for j in times]
                 data = data * scalearray
+                data = np.concatenate((data[::-1], data))
             ft = np.fft.fft(data)
             fftdata[label] = ft
             colourdata[label] = colour
@@ -451,7 +483,13 @@ for n, c in enumerate(commands):
                 else:
                     combined = magnitude
                 axes[n].plot(freq, combined[CHOP:int(N/2)], label=k, color=colourdata[k])
-            axes[n].set_title(f'FFT {mode}')
+            title = f'[{mode}]'
+            if doPhase : title = 'Phase Modulated ' + title
+
+            if doPowerSpectra: title = 'Power Spectra '+ title
+            else: title = title + 'FT Spectra '+ title
+
+            axes[n].set_title(title)
             axes[n].set_ylabel('Intensity')
             axes[n].set_xlabel('Frequency Hz')
         axes[n].legend(loc='upper right')
