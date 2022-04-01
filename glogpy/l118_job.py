@@ -39,14 +39,8 @@ class l118_job(gaussian_job):
         super().__init__(txt)
 
     def parse(self, print_info=True, spin_dens=False):
-        l202_init = None
-        for x in self.link_list:
-            if x.number == 202 : 
-                l202_init = x
-                break
-         
-        if l202_init == None : raise Exception("[L118P] No link 202!")
-        l202_init = linkparsers.L202(l202_init.text) # Need this for atom labels
+        l202s = filter(lambda x: x.number==202, self.link_list)
+        l202_init, *l202s = [linkparsers.L202(x.text) for x in list(l202s)]
 
         l510s = filter(lambda x: x.number==510, self.link_list)
         l510_init, *l510s = [linkparsers.L510_TD(x.text, do_CI_States=True) for x in list(l510s)]
@@ -58,7 +52,8 @@ class l118_job(gaussian_job):
         
         l601s = filter(lambda x: x.number==601, self.link_list)
         l601_init, *l601s = [linkparsers.L601(x.text, spin_dens) for x in list(l601s)[:-1]]
+
         assert(len(l510s) == len(l118s) == len(l601s)) # The number of in-loop links must be consistent
         xn = [(l510_init, [l118_init], l601_init)] + list(zip(l510s, l118s, l601s)) # Prepend the first step
-
+        
         return (l202_init, xn)

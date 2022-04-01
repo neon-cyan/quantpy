@@ -81,6 +81,7 @@ class TestJobs(unittest.TestCase):
         data = data.split('Initial command:\n')[3]
         gj = l118_job(data)
         ans = gj.parse()
+        print(ans)
 
     def test_isop_l118_spindens(self):
         with open('glogpy/tests/isoprop_sd.log', 'r') as f:
