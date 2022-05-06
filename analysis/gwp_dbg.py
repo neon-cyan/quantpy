@@ -16,6 +16,8 @@ ATOMICLABELS = ['H',  'He',  'Li',  'Be',  'B',  'C',  'N',  'O',  'F',  'Ne',  
     'Bh',  'Hs',  'Mt',  'Ds',  'Rg',  'Cn',  'Nh',  'Fl',  'Mc',  'Lv',  'Ts',  'Og'] # Yes *all* of the elements
 
 
+# General probelm-GWP-finding function
+
 def find_probelm_gwps(basepath, manifest):
     assert('casde' in manifest['quantities'])
     assert('nucde' in manifest['quantities'])
@@ -65,12 +67,16 @@ def find_probelm_gwps(basepath, manifest):
 
     print(f'GWPs need further attention : {[i+1 for i in prob_gwps]}')
 
+# Plots all GWPs properties
+
 def plotgwpforce(basepath, manifest):
     assert('maxf' in manifest['quantities'])
     print('Which GWPs to plot? Use a comma seperated list')
-    gwps = input()
-    gwps = [int(i)-1 for i in gwps.split(',')]
     raw_data = np.load(os.path.join(basepath, 'maxf'))
+    gwps = input()
+    if gwps == '*': gwps=list(range(0,raw_data.shape[0]))
+    else: gwps = [int(i)-1 for i in gwps.split(',')]
+
     times = np.load(os.path.join(basepath, 'times'))
     fig, ax = plt.subplots()
     for i in gwps:
@@ -85,9 +91,10 @@ def plotgwpforce(basepath, manifest):
 def plotcascon(basepath, manifest):
     assert('casde' in manifest['quantities'])
     print('Which GWPs to plot? Use a comma seperated list')
-    gwps = input()
-    gwps = [int(i)-1 for i in gwps.split(',')]
     raw_data = np.load(os.path.join(basepath, 'casde'))
+    gwps = input()
+    if gwps == '*': gwps=list(range(0,raw_data.shape[0]))
+    else: gwps = [int(i)-1 for i in gwps.split(',')]
     times = np.load(os.path.join(basepath, 'times'))
     fig, ax = plt.subplots()
     for i in gwps:
@@ -99,135 +106,158 @@ def plotcascon(basepath, manifest):
     fig.savefig(os.path.join(basepath, 'dbg_casde.png'))
     plt.show()
 
+# Singlewise GWP plots
+
 def plotnms(basepath, manifest):
     assert('nm' in manifest['quantities'])
-    print('Which GWP to plot?')
+    print('Which GWP to plot? * for all')
+    raw_data = np.load(os.path.join(basepath, 'nm'))
     gwp = input()
-    gwp = int(gwp)-1
+    if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
+    else: gwp = [int(gwp)-1]
+
     print('Which NMs to plot? Give a comma seperated list')
     nms = input()
     nms = [int(i)-1 for i in nms.split(',')]
 
-    raw_data = np.load(os.path.join(basepath, 'nm'))[gwp].T
-    times = np.load(os.path.join(basepath, 'times'))
-    fig, ax = plt.subplots()
-    for i in nms:
-        ax.plot(times, raw_data[i], label=f'NM{i+1}')
-    ax.set_title(f'Normal mode evolution (for GWP{gwp+1})')
-    ax.set_ylabel('Normal mode evolution')
-    ax.set_xlabel('Time (fs)')
-    ax.legend(loc='upper right')
-    fig.savefig(os.path.join(basepath, f'dbg_nms_gwp{gwp+1}.png'))
-    plt.show()
+    for g in gwp:
+        rd = raw_data[g].T
+        times = np.load(os.path.join(basepath, 'times'))
+        fig, ax = plt.subplots()
+        for i in nms:
+            ax.plot(times, rd[i], label=f'NM{i+1}')
+        ax.set_title(f'Normal mode evolution (for GWP{g+1})')
+        ax.set_ylabel('Normal mode evolution')
+        ax.set_xlabel('Time (fs)')
+        ax.legend(loc='upper right')
+        fig.savefig(os.path.join(basepath, f'dbg_nms_gwp{g+1}.png'))
+        if len(gwp) == 1 : plt.show()
+    print('Plot OK')
 
 def plotcsf(basepath, manifest):
     assert('csf' in manifest['quantities'])
-    print('Which GWP to plot?')
+    print('Which GWP to plot? * for all')
+    raw_data = np.load(os.path.join(basepath, 'csf'))
     gwp = input()
-    gwp = int(gwp)-1
+    if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
+    else: gwp = [int(gwp)-1]
+
     print('Which CSFs to plot? Give a comma seperated list')
     nms = input()
     nms = [int(i)-1 for i in nms.split(',')]
-
-    raw_data = np.load(os.path.join(basepath, 'csf'))[gwp].T
-    times = np.load(os.path.join(basepath, 'times'))
-    fig, ax = plt.subplots()
-    for i in nms:
-        ax.plot(times, raw_data[i], label=f'NM{i+1}')
-    ax.set_title(f'CSF population evolution (for GWP{gwp+1})')
-    ax.set_ylabel('CSF population evolution')
-    ax.set_xlabel('Time (fs)')
-    ax.legend(loc='upper right')
-    fig.savefig(os.path.join(basepath, f'dbg_csf_gwp{gwp+1}.png'))
-    plt.show()
+    for g in gwp:
+        rd = raw_data[g].T
+        times = np.load(os.path.join(basepath, 'times'))
+        fig, ax = plt.subplots()
+        for i in nms:
+            ax.plot(times, np.abs(rd[i]), label=f'CSF{i+1}')
+        ax.set_title(f'CSF population evolution (for GWP{g+1})')
+        ax.set_ylabel('CSF population evolution')
+        ax.set_xlabel('Time (fs)')
+        ax.legend(loc='upper right')
+        fig.savefig(os.path.join(basepath, f'dbg_csf_gwp{g+1}.png'))
+        if len(gwp) == 1 : plt.show()
+    print('Plot OK')
 
 def plotci(basepath, manifest):
     assert('ci' in manifest['quantities'])
     print('Which GWP to plot?')
+    raw_data = np.load(os.path.join(basepath, 'ci'))
     gwp = input()
-    gwp = int(gwp)-1
+    if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
+    else: gwp = [int(gwp)-1]
+
     print('Which CIs to plot? Give a comma seperated list')
     nms = input()
     nms = [int(i)-1 for i in nms.split(',')]
-
-    raw_data = np.load(os.path.join(basepath, 'ci'))[gwp].T
-    times = np.load(os.path.join(basepath, 'times'))
-    fig, ax = plt.subplots()
-    for i in nms:
-        ax.plot(times, raw_data[i], label=f'NM{i+1}')
-    ax.set_title(f'CI population evolution (for GWP{gwp+1})')
-    ax.set_ylabel('CI population evolution')
-    ax.set_xlabel('Time (fs)')
-    ax.legend(loc='upper right')
-    fig.savefig(os.path.join(basepath, f'dbg_ci_gwp{gwp+1}.png'))
-    plt.show()
+    for g in gwp:
+        rd = raw_data[g].T
+        times = np.load(os.path.join(basepath, 'times'))
+        fig, ax = plt.subplots()
+        for i in nms:
+            ax.plot(times, np.abs(rd[i]), label=f'CI{i+1}')
+        ax.set_title(f'CI population evolution (for GWP{g+1})')
+        ax.set_ylabel('CI population evolution')
+        ax.set_xlabel('Time (fs)')
+        ax.legend(loc='upper right')
+        fig.savefig(os.path.join(basepath, f'dbg_ci_gwp{g+1}.png'))
+        if len(gwp) == 1 : plt.show()
+    print('Plot OK')
 
 def plotbl(basepath, manifest):
     assert('xyz' in manifest['quantities'])
     print('Which GWP to plot?')
+    raw_data = np.load(os.path.join(basepath, 'xyz'))
     gwp = input()
-    gwp = int(gwp)-1
+    if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
+    else: gwp = [int(gwp)-1]
+
     print('Which BLs to plot? Give a dash, comma seperated list e.g 1-2,2-3,4-6')
     bls = input()
     BPS = []
     for x in bls.split(','):
         a, b = [int(z) for z in x.split('-')]
         BPS.append([a,b])
+    for g in gwp:
+        rd = raw_data[g]
+        times = np.load(os.path.join(basepath, 'times'))
+        fig, ax = plt.subplots()
+        for a in BPS:
+            dp = []
+            for x in range(manifest['steps']):
+                dp.append(mathutils.MathUtils.bond_length(rd[x, a[0]-1],rd[x, a[1]-1] ))
 
-    raw_data = np.load(os.path.join(basepath, 'xyz'))[gwp]
-    times = np.load(os.path.join(basepath, 'times'))
-    fig, ax = plt.subplots()
-    for a in BPS:
-        dp = []
-        for x in range(manifest['steps']):
-            dp.append(mathutils.MathUtils.bond_length(raw_data[x, a[0]-1],raw_data[x, a[1]-1] ))
+            try: alab1 = ATOMICLABELS[manifest['atomnos'][str(a[0])]-1]
+            except: alab1 = '?'
+            try: alab2 = ATOMICLABELS[manifest['atomnos'][str(a[1])]-1]
+            except: alab2 = '?'
 
-        try: alab1 = ATOMICLABELS[manifest['atomnos'][str(a[0])]-1]
-        except: alab1 = '?'
-        try: alab2 = ATOMICLABELS[manifest['atomnos'][str(a[1])]-1]
-        except: alab2 = '?'
-
-        ax.plot(times, dp, label=f'{alab1}[{a[0]}] - {alab2}[{a[1]}]')
-    ax.set_title(f'BL evolution (for GWP{gwp+1})')
-    ax.set_ylabel('Bond length (Å)')
-    ax.set_xlabel('Time (fs)')
-    ax.legend(loc='upper right')
-    fig.savefig(os.path.join(basepath, f'dbg_bl_gwp{gwp+1}.png'))
-    plt.show()
+            ax.plot(times, dp, label=f'{alab1}[{a[0]}] - {alab2}[{a[1]}]')
+        ax.set_title(f'BL evolution (for GWP{g+1})')
+        ax.set_ylabel('Bond length (Å)')
+        ax.set_xlabel('Time (fs)')
+        ax.legend(loc='upper right')
+        fig.savefig(os.path.join(basepath, f'dbg_bl_gwp{g+1}.png'))
+        if len(gwp) == 1 : plt.show()
+    print('Plot OK')
 
 def plotfnm(basepath, manifest):
     assert('nm' in manifest['quantities'])
     assert('forces' in manifest['quantities'])
 
     print('Which GWP to plot?')
+    raw_data = np.load(os.path.join(basepath, 'forces'))[gwp]
     gwp = input()
-    gwp = int(gwp)-1
+    if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
+    else: gwp = [int(gwp)-1]
+
     print('Which NMs to plot? Give a comma seperated list')
     nms = input()
     nms = [int(i)-1 for i in nms.split(',')]
+    for g in gwp:
+        rd = raw_data[g]
+        xyz2nm = np.load(os.path.join(basepath, 'xyz2nm'))
+        times = np.load(os.path.join(basepath, 'times'))
+        fig, ax = plt.subplots()
 
-    raw_data = np.load(os.path.join(basepath, 'forces'))[gwp]
-    xyz2nm = np.load(os.path.join(basepath, 'xyz2nm'))
-    times = np.load(os.path.join(basepath, 'times'))
-    fig, ax = plt.subplots()
-
-    for a in nms:
-        dp = []
-        xyz_nma = xyz2nm[a]
-        for b in range(raw_data.shape[0]):
-            dp.append(xyz_nma.dot(raw_data[b].reshape(xyz_nma.shape)))
-        ax.plot(times, dp, label=f'NM{a+1}')
-    ax.set_title(f'Gradient in terms of normal modes (for GWP{gwp+1})')
-    ax.set_ylabel('Gradient as normal mode')
-    ax.set_xlabel('Time (fs)')
-    ax.legend(loc='upper right')
-    fig.savefig(os.path.join(basepath, f'dbg_pfnm_gwp{gwp+1}.png'))
-    plt.show()
+        for a in nms:
+            dp = []
+            xyz_nma = xyz2nm[a]
+            for b in range(rd.shape[0]):
+                dp.append(xyz_nma.dot(rd[b].reshape(xyz_nma.shape)))
+            ax.plot(times, dp, label=f'NM{a+1}')
+        ax.set_title(f'Gradient in terms of normal modes (for GWP{g+1})')
+        ax.set_ylabel('Gradient as normal mode')
+        ax.set_xlabel('Time (fs)')
+        ax.legend(loc='upper right')
+        fig.savefig(os.path.join(basepath, f'dbg_pfnm_gwp{g+1}.png'))
+        if len(gwp) == 1 : plt.show()
+    print('Plot OK')
 
 if len(sys.argv) < 3:
     print(f'Use {sys.argv[0]} path/to/manifest.json task')
     print('''Availble tasks:
-    qs = QuickSearch help identify problem GWPs
+    qs = QuickSearch (helps identify problem GWPs)
     pforce = Plot Max Gradient (Force)
     pcasde = Plot CASSCF Convergence [GWP-wise]
     pnm = Plot normal modes [GWP-wise]
