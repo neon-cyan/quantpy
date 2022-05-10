@@ -1,6 +1,53 @@
 import numpy as np
 import copy
 
+class Stitcher:
+    def compute(m, thresh=0.04, quiet=False):
+        if not quiet:
+            print('''
+            .dP"Y8 888888 88 888888  dP""b8 88  88 888888 88""Yb     
+            `Ybo."   88   88   88   dP   `" 88  88 88__   88__dP     
+            o.`Y8b   88   88   88   Yb      888888 88""   88"Yb      
+            8bodP'   88   88   88    YboodP 88  88 888888 88  Yb    
+            ''')
+            print(f'{m.shape[0]} TRAJECTORIES // {m.shape[1]} CI STATES // {m.shape[2]} STEPS // {m.shape[3]} CSF/SD STATES')
+
+        ans = []
+
+        for ntraj, traj in enumerate(m):
+            if not quiet: print(f'Start traj {ntraj + 1}/{m.shape[0]}')
+            for nci_state, _ in enumerate(traj):
+                if not quiet: print(f'-> Following CI state {nci_state + 1}/{m.shape[1]}')
+                i = 0
+                current_ci = nci_state
+                while i < m.shape[2] -1:
+                    # Walk through the whole simulatin step-by-step
+                    if np.linalg.norm(m[ntraj][current_ci][i+1] - m[ntraj][current_ci][i]) > thresh: # States have re-ordered - need a stitch
+                        for j in range(m.shape[1]):
+                            # print(j, m.shape[1], np.linalg.norm(m[ntraj][current_ci][i] - m[ntraj][j][i+1]))
+                            found = False
+                            if np.linalg.norm(m[ntraj][current_ci][i] - m[ntraj][j][i+1]) < thresh : 
+                                if not quiet: print(f'--> Need a stitch @ ({ntraj+1},{i+1}) for states {nci_state+1} [{current_ci+1}] <-> {j+1}')
+                                ans.append((ntraj, i, nci_state, j))
+                                current_ci = j
+                                found = True 
+                                break   
+                        if not found: raise Exception("Unable to find suitable stitch!")
+                    i += 1
+
+        if not quiet: print(f'STITCHER FINISHED - Suggest {len(ans)} stitches')
+        return ans
+
+    def run(m, stitches, quiet=True):
+        # M is a tensor with dims traj, ci_state, steps, quantity
+        # stitches are a tuple of form traj,step_num,state1,state2
+        if not quiet: print(f'''EXECTUING {len(stitches)} STITCHES ON {m.shape}''')
+        ans = copy.deepcopy(m)
+        for s in stitches:
+            if not quiet: print(f"Start on stitch {s}")
+            ans[s[0],s[2],s[1]:] = m[s[0],s[3],s[1]:]
+        return ans
+
 class MathUtils:
 
     def bond_angle(a1, a2, a3, mode="rad"):

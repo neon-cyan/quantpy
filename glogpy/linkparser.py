@@ -331,15 +331,26 @@ class linkparsers():
                         break
                 d['diabats'] = diabats
 
-            elif 'MCSCF vectors and energies' in ln and do_CI_States:
+            elif 'EIGENVALUES AND  EIGENVECTORS OF CI MATRIX' in ln and do_CI_States:
+                import re
                 cies = {}
-                for nci in txt[i+2:]:
-                    try:
-                        s, e = nci.split()
-                        cies[int(s)] = float(e)
-                    except Exception as e:
-                        break
-                d['cies'] = cies
+                ci_energies = {}
+                for nci in txt[i+4:]:
+                    if 'iTDHX' in nci or '***' in nci: break
+                    elif 'EIGENVALUE' in nci:
+                        # print(nci.split('  '),nci.split('  ')[1],nci.split('  ')[4])
+                        state = int(nci.split('  ')[1].replace('(', '').replace(')',''))
+                        state_energy = float(nci.split('  ')[4])
+                        ci_energies[state] = state_energy
+                        cies[state] = {}
+                    else:
+                        for x in re.findall('\(\ *\d*\)-?\s?\d.\d*', nci):
+                            # print(x.replace('(','').split(')'))
+                            n,c = x.replace('(','').split(')')
+                            cies[state][int(n)] = float(c)
+
+                d['cic'] = cies
+                d['cie'] = ci_energies
 
 
             elif 'Current Time Dep wavefunction in basis of ci state functions' in ln:

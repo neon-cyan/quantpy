@@ -73,6 +73,13 @@ class TestJobs(unittest.TestCase):
         ans = gj.parse()
         self.assertDictEqual(ans['atomnos'],{1: 6, 2: 6, 3: 6, 4: 1, 5: 1, 6: 1, 7: 1})
 
+    def test_allene_dynamics_withCIMat(self):
+        with open('glogpy/tests/qdyn_allene.log', 'r') as f:
+            data = f.read()
+        gj = dj(data)
+        ans = gj.parse(do_CI_States=True)
+        print(ans)
+        self.assertDictEqual(ans['atomnos'],{1: 6, 2: 6, 3: 6, 4: 1, 5: 1, 6: 1, 7: 1})
     # TEST IV : L118 test
 
     def test_formaldehyde_l118(self):

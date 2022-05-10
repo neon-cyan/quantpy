@@ -1,4 +1,5 @@
 from glogpy.l118_job import l118_job
+from mathutils import Stitcher
 import argparse
 import sys, os
 import mathutils
@@ -20,6 +21,8 @@ parser.add_argument('--glob', dest='glob', action='store_true',
 parser.add_argument('--spindens', dest='spindens', action='store_true',
                     help='Extract spin density')
 
+parser.add_argument('--stitcher', dest='stitch', action='store_true',
+                    help='Stitch the CI pops & energies')
 args = parser.parse_args()
 print(args)
 
@@ -41,10 +44,11 @@ else:
     data = data.split('Initial command:\n')[-1] # Assume the L118 job is the last
     gj = l118_job(data)
 
-    OUTDIR = args.adir if args.adir[0] == '/' else os.path.join(os.path.dirname(LOGFILE), args.adir)
-    os.makedirs(OUTDIR)
+    OUTDIR = args.adir if args.adir[0] == '/' else os.path.join(os.path.dirname(LOGFILE), f'{LOGFILE}.{args.adir}')
+    try: os.makedirs(OUTDIR)
+    except FileExistsError: pass
 
-    l202, xns = gj.parse(spin_dens=args.spindens)
+    l202, xns = gj.parse(spin_dens=args.spindens, do_CI_States=True)
     manifest['atomnos'] = l202['proton_nums']
     manifest['steps'] = len(xns)
 
@@ -54,10 +58,31 @@ else:
         np.save(f, times)
     manifest['quantities'].append('t')
 
-    # save CI pop
-    adiabats = np.abs(np.array([mathutils.MathUtils.dict_to_list(i[0]['adiabats']) for i in xns])).T
+    # CI state compositions, energies, populations & stitches
+    ci_composition = np.array([mathutils.MathUtils.dict_to_list(i[0]['cic']) for i in xns])    
+    ci_composition = np.array([[[mathutils.MathUtils.dict_to_list(j) for j in i] for i in ci_composition]])
+    cie_energies = np.array([[mathutils.MathUtils.dict_to_list(i[0]['cie']) for i in xns]]) 
+    print('CIESSHPE=', cie_energies.shape)
+    adiabats = np.array([[mathutils.MathUtils.dict_to_list(i[0]['adiabats']) for i in xns]])    
+    adiabats = adiabats[:,:,:cie_energies.shape[2]].transpose(0,2,1)
+    print(adiabats)
+    print('ADBTS = ', adiabats.shape)
+    if args.stitch:
+        stitches = Stitcher.compute(ci_composition.transpose((0,2,1,3)))
+        ci_composition = Stitcher.run(ci_composition.transpose((0,2,1,3)), stitches)[0]
+        cie_energies = Stitcher.run(cie_energies.transpose((0,2,1)),stitches)[0]
+        adiabats = Stitcher.run(adiabats,stitches)[0]
+        manifest['stitched'] = True
+
+    with open(os.path.join(OUTDIR, 'cies'), 'wb') as f:
+        np.save(f, cie_energies)
+    manifest['quantities'].append('cies')
+    print(ci_composition.shape)
+    with open(os.path.join(OUTDIR, 'cicomp'), 'wb') as f:
+        np.save(f, ci_composition)
+    manifest['quantities'].append('cicomp')
     with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
-        np.save(f, adiabats)
+        np.save(f, abs(adiabats))
     manifest['quantities'].append('ci')
 
     # save CSF pop

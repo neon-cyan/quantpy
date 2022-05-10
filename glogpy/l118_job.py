@@ -38,7 +38,7 @@ class l118_job(gaussian_job):
     def __init__(self, txt):
         super().__init__(txt)
 
-    def parse(self, print_info=True, spin_dens=False):
+    def parse(self, print_info=True, spin_dens=False,do_CI_States=True):
         l202_init = None
         for x in self.link_list:
             if x.number == 202 : 
@@ -49,8 +49,8 @@ class l118_job(gaussian_job):
         l202_init = linkparsers.L202(l202_init.text) # Need this for atom labels
 
         l510s = filter(lambda x: x.number==510, self.link_list)
-        l510_init, *l510s = [linkparsers.L510_TD(x.text, do_CI_States=True) for x in list(l510s)]
-        
+        l510_init, *l510s = [linkparsers.L510_TD(x.text, do_CI_States=do_CI_States) for x in list(l510s)]
+
         l118s = filter(lambda x: x.number==118, self.link_list)
         l118s = [linkparsers.L118(x.text) for x in list(l118s)[1:-1]]
         l118_init = l118s[0][0]
