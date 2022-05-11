@@ -19,6 +19,9 @@ parser.add_argument('--adir', type=str, default='analysis',
 parser.add_argument('--steps', default='A',
                     help='Number of steps to parse [defaults to all steps]')
 
+parser.add_argument('--stitch', dest='stitch',action='store_true',
+                    help='Stitch the CI energies and populations')
+
 parser.add_argument('--tasks', type=str, nargs='*', default=['nm', 'ci', 'csf', 'mq', 'sd', 'xyz', 'maxf', 'casde', 'nucde'],
                     help='''Things to extract. Options are
                     nm    = normal modes*
@@ -169,15 +172,23 @@ def weightscale(datax, weight, ns):
             datax_ave[i,x] = abs(datax[i, x]).dot(weight[x])
     return datax_ave
 
-
 for task in args.tasks:
     if task=='ci':
-        adiabats = data_gwpx['adiabats'].transpose(2,1,0)
-        adiabats_ave = weightscale_sq(adiabats, gwp_sf, nsteps)
+        cipops = data_gwpx['adiabats'].transpose(2,1,0)[:data_gwpx['cic'].shape[2]]
+        ci_energies = data_gwpx['cies'].transpose(2,1,0)   
+        # print(f'CIPOPS = {cipops.shape} CIES = {ci_energies.shape}')
+        if args.stitch:
+            ci_stitches = mathutils.Stitcher.compute(data_gwpx['cic'].transpose(0,2,1,3))
+            ci_energies = mathutils.Stitcher.run(ci_energies.transpose((2,0,1)), ci_stitches).transpose((1,2,0))
+            cipops = mathutils.Stitcher.run(cipops.transpose((2,0,1)), ci_stitches).transpose((1,2,0))
+
+        cipops_ave = weightscale_sq(cipops, gwp_sf, nsteps)
         with open(os.path.join(OUTDIR, 'ci'), 'wb') as f:
-            np.save(f, adiabats.T)
+            np.save(f, cipops.T)
+        with open(os.path.join(OUTDIR, 'cies'), 'wb') as f:
+            np.save(f, ci_energies.T)
         with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
-            np.save(f, adiabats_ave)
+            np.save(f, cipops_ave)
         manifest['quantities'].append('ci')
 
     elif task=='csf':

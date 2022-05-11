@@ -2,7 +2,7 @@ import numpy as np
 import copy
 
 class Stitcher:
-    def compute(m, thresh=0.04, quiet=False):
+    def compute(m, thresh=0.7, quiet=False):
         if not quiet:
             print('''
             .dP"Y8 888888 88 888888  dP""b8 88  88 888888 88""Yb     
@@ -22,11 +22,15 @@ class Stitcher:
                 current_ci = nci_state
                 while i < m.shape[2] -1:
                     # Walk through the whole simulatin step-by-step
-                    if np.linalg.norm(m[ntraj][current_ci][i+1] - m[ntraj][current_ci][i]) > thresh: # States have re-ordered - need a stitch
+                    d1 = np.linalg.norm(m[ntraj][current_ci][i+1] - m[ntraj][current_ci][i])
+                    d2 = np.linalg.norm(m[ntraj][current_ci][i+1] + m[ntraj][current_ci][i])
+                    if min(d1,d2) > thresh: # States have re-ordered - need a stitch
+                        found = False
                         for j in range(m.shape[1]):
-                            # print(j, m.shape[1], np.linalg.norm(m[ntraj][current_ci][i] - m[ntraj][j][i+1]))
-                            found = False
-                            if np.linalg.norm(m[ntraj][current_ci][i] - m[ntraj][j][i+1]) < thresh : 
+                            # print(j, m.shape[1], min(d1,d2))
+                            d1 = np.linalg.norm(m[ntraj][current_ci][i] - m[ntraj][j][i+1])
+                            d2 = np.linalg.norm(m[ntraj][current_ci][i] + m[ntraj][j][i+1])
+                            if min(d1,d2) < thresh : 
                                 if not quiet: print(f'--> Need a stitch @ ({ntraj+1},{i+1}) for states {nci_state+1} [{current_ci+1}] <-> {j+1}')
                                 ans.append((ntraj, i, nci_state, j))
                                 current_ci = j

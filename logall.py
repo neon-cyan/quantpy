@@ -6,7 +6,7 @@ import re
 from glogpy.dynamics_job import dynamics_job as dj
 
 class ParseLogAll():
-    def parse(txt, step_lim=None):
+    def parse(txt, step_lim=None, do_CI_States=True):
         sections = re.split("\*{4} Time.{1,}\d{1,}\.\d{1,}.{1,}\*{4}", txt )
         res = []
         nsteps = 0
@@ -15,7 +15,7 @@ class ParseLogAll():
                 if nsteps == step_lim: break
             try:
                 data = dj(s.strip())
-                data = data.parse()
+                data = data.parse(do_CI_States=do_CI_States)
                 res.append(data)
             except: raise Exception(f'An error occured parsing step {nsteps} {txt}')
             nsteps += 1
@@ -50,8 +50,8 @@ class ParseLogAll():
             assert(os.path.exists(loagallf))
             with open(loagallf, 'r') as f:
                 data = f.read()
-            parsed_data, nsteps = ParseLogAll.parse(data, step_lim = step_lim)
-
+            parsed_data, nsteps = ParseLogAll.parse(data, step_lim = step_lim, do_CI_States=('ci' in quantities))
+            del(data)
             # Make sure all GWP loagalls contain same num steps
             if steps == None:
                 steps = nsteps
@@ -68,10 +68,14 @@ class ParseLogAll():
             results['atomnos'] = datax[0][0]['atomnos']
         if 'am' in quantities:
             results['atommasses']  = datax[0][0]['atommasses']
+        # CI data (state pops, energies and coefs)
+        if 'ci' in quantities:
+            results['adiabats'] = np.zeros([ngwps, steps, len(datax[0][0]['adiabats'])], dtype=complex)
+            results['cic'] = np.zeros([ngwps, steps, len(datax[0][0]['cie']), len(datax[0][0]['cic'][1])])    
+            results['cies'] = np.zeros([ngwps, steps, len(datax[0][0]['cie'])])
 
         #  Work way through scalar data to gen [GWP x Step]
-        if 'ci' in quantities:
-            results['adiabats'] = np.zeros([ngwps, steps, len(datax[0][0]['adiabats'])],  dtype=complex)
+
         if 'csf' in quantities:
             results['diabats'] =  np.zeros([ngwps, steps, len(datax[0][0]['diabats'])],   dtype=complex)
         if 'maxf' in quantities:
@@ -106,6 +110,9 @@ class ParseLogAll():
             for j, ts in enumerate(gwp):
                 if 'ci' in quantities:
                     results['adiabats'][i,j] = np.array(MathUtils.dict_to_list(ts['adiabats']))
+                if 'ci' in quantities:
+                    results['cies'][i,j] = np.array(MathUtils.dict_to_list(ts['cie']))
+                    results['cic'][i,j] = np.array([MathUtils.dict_to_list(x) for x in MathUtils.dict_to_list(ts['cic'])])
 
                 if 'csf' in quantities:
                     results['diabats'][i,j] = np.array(MathUtils.dict_to_list(ts['diabats']))
@@ -139,4 +146,5 @@ class ParseLogAll():
                 if 'maxf' in quantities:
                     results['maxf'][i,j] = ts['maxforce']
                     results['rmsf'][i,j] = ts['rmsforce']
+        del(datax)
         return results

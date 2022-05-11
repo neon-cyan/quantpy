@@ -78,11 +78,18 @@ class TestJobs(unittest.TestCase):
             data = f.read()
         gj = dj(data)
         ans = gj.parse(do_CI_States=True)
-        print(ans)
+        # print(ans)
         self.assertDictEqual(ans['atomnos'],{1: 6, 2: 6, 3: 6, 4: 1, 5: 1, 6: 1, 7: 1})
     # TEST IV : L118 test
 
-    def test_formaldehyde_l118(self):
+    def test_formaldehyde_l118(self, do_CI_States=False):
+        with open('glogpy/tests/methanal_s1_ts.log', 'r') as f:
+            data = f.read()
+        data = data.split('Initial command:\n')[3]
+        gj = l118_job(data)
+        ans = gj.parse()
+
+    def test_formaldehyde_l118_withCIMat(self, do_CI_States=True):
         with open('glogpy/tests/methanal_s1_ts.log', 'r') as f:
             data = f.read()
         data = data.split('Initial command:\n')[3]
