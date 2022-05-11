@@ -94,7 +94,7 @@ print(f'QOUT file parsed')
 
 # Load in all GWP logalls
 tasks = ['an', 'am'] + args.tasks
-data_gwpx = ParseLogAll.I_ImportLogalls(datadir, q_inp_data['ngwp'], step_lim=STEPLIMS, quantities=tasks)
+data_gwpx = ParseLogAll.I_ImportLogalls(datadir, q_inp_data['ngwp'], step_lim=STEPLIMS, quantities=tasks, fname='gwp{}_V1_'+q_inp_data['data']+'.logall')
 nsteps = data_gwpx['steps']
 assert(nsteps == len(q_out_data))
 
