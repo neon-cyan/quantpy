@@ -49,7 +49,7 @@ class Stitcher:
         ans = copy.deepcopy(m)
         for s in stitches:
             if not quiet: print(f"Start on stitch {s}")
-            ans[s[0],s[2],s[1]:] = m[s[0],s[3],s[1]:]
+            ans[s[0],s[2],s[1]+1:] = m[s[0],s[3],s[1]+1:]
         return ans
 
 class MathUtils:

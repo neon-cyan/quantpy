@@ -17,7 +17,7 @@ class ParseLogAll():
                 data = dj(s.strip())
                 data = data.parse(do_CI_States=do_CI_States)
                 res.append(data)
-            except: raise Exception(f'An error occured parsing step {nsteps} {txt}')
+            except: raise Exception(f'An error occured parsing step {nsteps}')
             nsteps += 1
         return res, nsteps
 
