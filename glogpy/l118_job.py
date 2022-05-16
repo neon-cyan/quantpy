@@ -54,8 +54,12 @@ class l118_job(gaussian_job):
         l118s = filter(lambda x: x.number==118, self.link_list)
         l118s = [linkparsers.L118(x.text) for x in list(l118s)[1:-1]]
         l118_init = l118s[0][0]
-        l118s[0] = [l118s[0][1]]
-        
+        # print(len(l118s[0]))
+        try:    l118s[0] = [l118s[0][1]]
+        except IndexError: 
+            l118s[0] = [l118s[0][0]]
+            print("You have missed the first step - perhaps you specified init velocity?")
+
         l601s = filter(lambda x: x.number==601, self.link_list)
         l601_init, *l601s = [linkparsers.L601(x.text, spin_dens) for x in list(l601s)[:-1]]
         assert(len(l510s) == len(l118s) == len(l601s)) # The number of in-loop links must be consistent

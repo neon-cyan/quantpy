@@ -62,17 +62,19 @@ else:
     ci_composition = np.array([mathutils.MathUtils.dict_to_list(i[0]['cic']) for i in xns])    
     ci_composition = np.array([[[mathutils.MathUtils.dict_to_list(j) for j in i] for i in ci_composition]])
     cie_energies = np.array([[mathutils.MathUtils.dict_to_list(i[0]['cie']) for i in xns]]) 
-    print('CIESSHPE=', cie_energies.shape)
+    # print('CIESSHPE=', cie_energies.shape)
     adiabats = np.array([[mathutils.MathUtils.dict_to_list(i[0]['adiabats']) for i in xns]])    
     adiabats = adiabats[:,:,:cie_energies.shape[2]].transpose(0,2,1)
-    print(adiabats)
-    print('ADBTS = ', adiabats.shape)
+    # print(adiabats)
+    # print('ADBTS = ', adiabats.shape)
     if args.stitch:
         stitches = Stitcher.compute(ci_composition.transpose((0,2,1,3)))
         ci_composition = Stitcher.run(ci_composition.transpose((0,2,1,3)), stitches)[0]
         cie_energies = Stitcher.run(cie_energies.transpose((0,2,1)),stitches)[0]
-        adiabats = Stitcher.run(adiabats,stitches)[0]
+        adiabats = Stitcher.run(adiabats,stitches)
         manifest['stitched'] = True
+
+    adiabats = adiabats[0]
 
     with open(os.path.join(OUTDIR, 'cies'), 'wb') as f:
         np.save(f, cie_energies)
@@ -82,6 +84,7 @@ else:
         np.save(f, ci_composition)
     manifest['quantities'].append('cicomp')
     with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
+        print(adiabats.shape)
         np.save(f, abs(adiabats))
     manifest['quantities'].append('ci')
 
