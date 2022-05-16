@@ -86,7 +86,7 @@ class QuanticsParsers():
 
             _, diagden, grosspop, modeexp = g.split('\n\n')
 
-            d['DiagD'] = parse_dd_ggp(diagden)
+            #d['DiagD'] = parse_dd_ggp(diagden)
             d['GGP'] = parse_dd_ggp(grosspop)
 
             meq_arr = []

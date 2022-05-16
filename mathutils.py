@@ -2,7 +2,7 @@ import numpy as np
 import copy
 
 class Stitcher:
-    def compute(m, thresh=0.7, quiet=False):
+    def compute(m, thresh=0.88, quiet=False, doublecheck=True):
         if not quiet:
             print('''
             .dP"Y8 888888 88 888888  dP""b8 88  88 888888 88""Yb     
@@ -11,6 +11,7 @@ class Stitcher:
             8bodP'   88   88   88    YboodP 88  88 888888 88  Yb    
             ''')
             print(f'{m.shape[0]} TRAJECTORIES // {m.shape[1]} CI STATES // {m.shape[2]} STEPS // {m.shape[3]} CSF/SD STATES')
+            if not doublecheck: print('Will use the best candidate - use with care as you may get active space drift!')
 
         ans = []
 
@@ -25,18 +26,18 @@ class Stitcher:
                     d1 = np.linalg.norm(m[ntraj][current_ci][i+1] - m[ntraj][current_ci][i])
                     d2 = np.linalg.norm(m[ntraj][current_ci][i+1] + m[ntraj][current_ci][i])
                     if min(d1,d2) > thresh: # States have re-ordered - need a stitch
-                        found = False
+                        cans = []
                         for j in range(m.shape[1]):
-                            # print(j, m.shape[1], min(d1,d2))
                             d1 = np.linalg.norm(m[ntraj][current_ci][i] - m[ntraj][j][i+1])
                             d2 = np.linalg.norm(m[ntraj][current_ci][i] + m[ntraj][j][i+1])
-                            if min(d1,d2) < thresh : 
-                                if not quiet: print(f'--> Need a stitch @ ({ntraj+1},{i+1}) for states {nci_state+1} [{current_ci+1}] <-> {j+1}')
-                                ans.append((ntraj, i, nci_state, j))
-                                current_ci = j
-                                found = True 
-                                break   
-                        if not found: raise Exception("Unable to find suitable stitch!")
+                            cans.append((j, min(d1,d2)))
+                        best, best_value = min(cans, key=lambda x : x[1])
+                        if not quiet: print(f'--> Need a stitch @ ({ntraj+1},{i+1}) for states {nci_state+1} [{current_ci+1}] <-> {best+1} [VALUE={best_value:.5f}]')
+                        if doublecheck and best_value > thresh : raise Exception("BEST STITCH TOO LARGE {best_value} > {thresh}!")
+                        if best_value > thresh and not quiet: print(f'LARGE STITCH {best_value} > {thresh}! DOUBLE CHECK - ACTIVE SPACE DRIFT!')
+
+                        ans.append((ntraj, i, nci_state, best))
+                        current_ci = best
                     i += 1
 
         if not quiet: print(f'STITCHER FINISHED - Suggest {len(ans)} stitches')
