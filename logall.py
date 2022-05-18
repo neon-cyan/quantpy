@@ -22,7 +22,7 @@ class ParseLogAll():
         return res, nsteps
 
     def I_ImportLogalls(basedir, ngwps, gwp_dir_fmt='gwp{}_V1', fname='gwp{}_V1_dd_data_nm.logall', 
-    step_lim=None, print_steps=True, 
+    step_lim=None, print_steps=True, pickle_if_fail=True,
     quantities=['xyz', 'ci', 'csf', 'mq', 'sd', 'an', 'am']):
         # Quantities options are
         # xyz   = geometries
@@ -108,43 +108,53 @@ class ParseLogAll():
 
         for i, gwp in enumerate(datax):
             for j, ts in enumerate(gwp):
-                if 'ci' in quantities:
-                    results['adiabats'][i,j] = np.array(MathUtils.dict_to_list(ts['adiabats']))
-                if 'ci' in quantities:
-                    results['cies'][i,j] = np.array(MathUtils.dict_to_list(ts['cie']))
-                    results['cic'][i,j] = np.array([MathUtils.dict_to_list(x) for x in MathUtils.dict_to_list(ts['cic'])])
+                try:
+                    if 'ci' in quantities:
+                        results['adiabats'][i,j] = np.array(MathUtils.dict_to_list(ts['adiabats']))
+                    if 'ci' in quantities:
+                        results['cies'][i,j] = np.array(MathUtils.dict_to_list(ts['cie']))
+                        results['cic'][i,j] = np.array([MathUtils.dict_to_list(x) for x in MathUtils.dict_to_list(ts['cic'])])
 
-                if 'csf' in quantities:
-                    results['diabats'][i,j] = np.array(MathUtils.dict_to_list(ts['diabats']))
-                
-                if 'xyz' in quantities:
-                    gtemp = MathUtils.dict_to_list(ts['geom_init'])
-                    gtemp = [x[1] for x in gtemp]
-                    results['geomx'][i,j] = np.array(gtemp)
-                
-                if 'fo' in quantities:
-                    ftemp =  MathUtils.dict_to_list(ts['forces'])
-                    results['forces'][i,j] = np.array(ftemp)
+                    if 'csf' in quantities:
+                        results['diabats'][i,j] = np.array(MathUtils.dict_to_list(ts['diabats']))
+                    
+                    if 'xyz' in quantities:
+                        gtemp = MathUtils.dict_to_list(ts['geom_init'])
+                        gtemp = [x[1] for x in gtemp]
+                        results['geomx'][i,j] = np.array(gtemp)
+                    
+                    if 'fo' in quantities:
+                        ftemp =  MathUtils.dict_to_list(ts['forces'])
+                        results['forces'][i,j] = np.array(ftemp)
 
-                if 'dp' in quantities:
-                    results['dipolemom'][i,j] = np.array(ts['dipole'][0])
+                    if 'dp' in quantities:
+                        results['dipolemom'][i,j] = np.array(ts['dipole'][0])
 
-                if 'casde' in quantities:
-                    results['casde'][i,j] = ts['casde']
+                    if 'casde' in quantities:
+                        results['casde'][i,j] = ts['casde']
 
-                if 'case' in quantities:
-                    results['case'][i,j] = ts['case']
+                    if 'case' in quantities:
+                        results['case'][i,j] = ts['case']
 
-                if 'mq' in quantities:
-                    for atomidx, mullsum in ts['mulliken_sum'].items():
-                        results['mullikensum'][i,j,results['mullikenmap'].index(atomidx)] = mullsum
+                    if 'mq' in quantities:
+                        for atomidx, mullsum in ts['mulliken_sum'].items():
+                            results['mullikensum'][i,j,results['mullikenmap'].index(atomidx)] = mullsum
 
-                if 'sd' in quantities:
-                    for atomidx, sdsum in ts['spinden_sum'].items():
-                        results['spindensum'][i,j,results['spindenmap'].index(atomidx)] = sdsum
+                    if 'sd' in quantities:
+                        for atomidx, sdsum in ts['spinden_sum'].items():
+                            results['spindensum'][i,j,results['spindenmap'].index(atomidx)] = sdsum
 
-                if 'maxf' in quantities:
-                    results['maxf'][i,j] = ts['maxforce']
-                    results['rmsf'][i,j] = ts['rmsforce']
+                    if 'maxf' in quantities:
+                        results['maxf'][i,j] = ts['maxforce']
+                        results['rmsf'][i,j] = ts['rmsforce']
+                except:
+                    print(f'An error occured in reformating LOGALL files at GWP{i+1} / TS {j+1}!')
+                    if pickle_if_fail:
+                        import pickle
+                        picklepath = os.path.join(basedir, 'data')
+                        print(f'SAVING TO {picklepath}')
+                        with open(picklepath, 'wb') as f:
+                            pickle.dump(datax, f)
+                    raise Exception('Failed to parse - halting')
         del(datax)
         return results

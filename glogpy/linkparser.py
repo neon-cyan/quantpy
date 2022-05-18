@@ -336,7 +336,7 @@ class linkparsers():
                 cies = {}
                 ci_energies = {}
                 for nci in txt[i+4:]:
-                    if 'iTDHX' in nci or '***' in nci: break
+                    if True in map(lambda x  : x in nci, ['iTDHX', '***', 'vector']): break
                     elif 'EIGENVALUE' in nci:
                         # print(nci.split('  '),nci.split('  ')[1],nci.split('  ')[4])
                         state = int(nci.split('  ')[1].replace('(', '').replace(')',''))
