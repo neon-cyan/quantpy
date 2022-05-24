@@ -54,7 +54,6 @@ class Stitcher:
         return ans
 
 class MathUtils:
-
     def bond_angle(a1, a2, a3, mode="rad"):
         v1 = a1-a2
         v2 = a3-a2

@@ -7,7 +7,7 @@ import numpy as np
 #  1/xxxx/1,18;
 #  2/xxxx/2;          <- GEOM INIT
 #  3/xxxx/1,2,3;
-#  4/xxxx/1,5;
+#  4/xxxx/1,5;        <- # of basis states (csfs / sds)
 #  5/xxxx/10;         <- State composition
 #  8/xxxx/1;
 #  11/xxx/1;
@@ -23,6 +23,7 @@ class dynamics_job(gaussian_job):
         super().__init__(txt)
 
     def parse(self, do_CI_States=False, spin_dens=True):
+        ans = {}
         l202_init = None
         for x in self.link_list:
             if x.number == 202 : 
@@ -31,39 +32,47 @@ class dynamics_job(gaussian_job):
                 
         if l202_init == None : raise Exception("[DYNX] No link 202!")
         geom = linkparsers.L202(l202_init.text)['geom']
+        ans['geom_init'] = geom
+
+        res = None
+        for x in self.link_list[::-1]: # Look for the last L405 -> Number of CSFs / SDs
+            if x.number == 405:
+                res = linkparsers.L405(x.text)
+                ans.update(res)
+                break
+        if res==None : raise Exception("[DYNX] No dynamics-compatible L405 found")
 
         res = None
         for x in self.link_list[::-1]: # Look for the last L510 -> State composition
             if x.number == 510 and 97 in x.iops.keys():
                 res = linkparsers.L510_TD(x.text, do_CI_States=do_CI_States)
+                ans.update(res)
                 break
         if res==None : raise Exception("[DYNX] No dynamics-compatible L510 found")
 
-        res2 = None
+        res = None
         for x in self.link_list[::-1]: # Look for the last L601 -> Miliken pop + sd
             if x.number == 601:
-                res2 = linkparsers.L601(x.text, spin_dens=spin_dens, dipole=True)
+                res = linkparsers.L601(x.text, spin_dens=spin_dens, dipole=True)
+                ans.update(res)
                 break
-        if res2==None : raise Exception("[DYNX] No dynamics-compatible L601 found")
-        res.update(res2)
+        if res==None : raise Exception("[DYNX] No dynamics-compatible L601 found")
 
-        res2 = None
+        res = None
         for x in self.link_list[::-1]: # Look for the last L716 -> MaxForce + Forces
             if x.number == 716:
-                res2 = linkparsers.L716_hpmodes(x.text, len(geom), False)
+                res = linkparsers.L716_hpmodes(x.text, len(geom), False)
+                ans.update(res)
                 break
-        if res2==None : raise Exception("[DYNX] No dynamics-compatible L716 found")
-        res.update(res2)
+        if res==None : raise Exception("[DYNX] No dynamics-compatible L716 found")
 
         res2 = None
         for x in self.link_list[::-1]: # Look for the last L202
             if x.number == 202:
                 if x == l202_init : raise Exception("[DYNX] No second L202 found!")
                 res2 = linkparsers.L202(x.text)
+                ans['geom_final'] = res2['geom']
                 break
 
-        res['geom_final'] = res2['geom']
-
-        res['geom_init'] = geom
-        # print(res)
-        return res
+        # print(ans)
+        return ans

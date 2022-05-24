@@ -311,6 +311,16 @@ class linkparsers():
             result['dipole'] = dm
         return result
 
+    def L405(txt):
+        import re
+        d= {'slater' : False}
+        for ln in txt:
+            if 'SLATER DETERMINANT BASIS' in ln:
+                d['slater'] = True
+            if 'NO OF BASIS FUNCTIONS' in ln:
+                d['n_basis'], d['ndel'] = [int(x) for x in re.findall('\d{1,}', ln)]
+        return d
+
     def L510_TD(txt, do_CI_States=False):
         d = {}
         for i, ln in enumerate(txt):
@@ -336,6 +346,7 @@ class linkparsers():
                 cies = {}
                 ci_energies = {}
                 for nci in txt[i+4:]:
+                    # print(nci)
                     if True in map(lambda x  : x in nci, ['iTDHX', '***', 'vector']): break
                     elif 'EIGENVALUE' in nci:
                         # print(nci.split('  '),nci.split('  ')[1],nci.split('  ')[4])
@@ -348,7 +359,7 @@ class linkparsers():
                             # print(x.replace('(','').split(')'))
                             n,c = x.replace('(','').split(')')
                             cies[state][int(n)] = float(c)
-
+                # print(cies, ci_energies)
                 d['cic'] = cies
                 d['cie'] = ci_energies
 

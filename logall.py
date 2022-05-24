@@ -71,7 +71,7 @@ class ParseLogAll():
         # CI data (state pops, energies and coefs)
         if 'ci' in quantities:
             results['adiabats'] = np.zeros([ngwps, steps, len(datax[0][0]['adiabats'])], dtype=complex)
-            results['cic'] = np.zeros([ngwps, steps, len(datax[0][0]['cie']), len(datax[0][0]['cic'][1])])    
+            results['cic'] = np.zeros([ngwps, steps, len(datax[0][0]['cie']), datax[0][0]['n_basis']])    
             results['cies'] = np.zeros([ngwps, steps, len(datax[0][0]['cie'])])
 
         #  Work way through scalar data to gen [GWP x Step]
@@ -113,7 +113,14 @@ class ParseLogAll():
                         results['adiabats'][i,j] = np.array(MathUtils.dict_to_list(ts['adiabats']))
                     if 'ci' in quantities:
                         results['cies'][i,j] = np.array(MathUtils.dict_to_list(ts['cie']))
-                        results['cic'][i,j] = np.array([MathUtils.dict_to_list(x) for x in MathUtils.dict_to_list(ts['cic'])])
+                        for nstate, ci in enumerate(MathUtils.dict_to_list(ts['cic'])):
+                            # print(ci)
+                            for s in range(datax[0][0]['n_basis']):
+                                try:
+                                    results['cic'][i,j,nstate,s] = ci[s+1]
+                                except KeyError:
+                                    results['cic'][i,j,nstate,s] = 0.0
+                            # print(results['cic'][i,j,nstate])
 
                     if 'csf' in quantities:
                         results['diabats'][i,j] = np.array(MathUtils.dict_to_list(ts['diabats']))
