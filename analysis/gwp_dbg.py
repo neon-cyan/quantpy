@@ -184,6 +184,31 @@ def plotci(basepath, manifest):
         if len(gwp) == 1 : plt.show()
     print('Plot OK')
 
+def plotpes(basepath, manifest):
+    assert('ci' in manifest['quantities'])
+    print('Which GWP to plot?')
+    raw_data = np.load(os.path.join(basepath, 'cies'))
+    gwp = input()
+    if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
+    else: gwp = [int(gwp)-1]
+
+    print('Which CIs to plot? Give a comma seperated list')
+    nms = input()
+    nms = [int(i)-1 for i in nms.split(',')]
+    for g in gwp:
+        rd = raw_data[g].T
+        times = np.load(os.path.join(basepath, 'times'))
+        fig, ax = plt.subplots()
+        for i in nms:
+            ax.plot(times, rd[i], label=f'CI{i+1}')
+        ax.set_title(f'TD-PES (for GWP{g+1})')
+        ax.set_ylabel('Energy / Ha')
+        ax.set_xlabel('Time (fs)')
+        ax.legend(loc='upper right')
+        fig.savefig(os.path.join(basepath, f'dbg_pes_gwp{g+1}.png'))
+        if len(gwp) == 1 : plt.show()
+    print('Plot OK')
+
 def plotbl(basepath, manifest):
     assert('xyz' in manifest['quantities'])
     print('Which GWP to plot?')
@@ -265,6 +290,7 @@ if len(sys.argv) < 3:
     pci = Plot ci populations [GWP-wise]
     pbl = Plot bond lengths [GWP-wise]
     pfnm = Plot gradient in normal modes
+    ppes = Plot TD-PES [GWP-wise]
     ''')
     sys.exit(-1)
 
@@ -286,3 +312,4 @@ if task=='pcsf' : plotcsf(basepath, manifest)
 if task=='pci' : plotci(basepath, manifest)
 if task=='pbl' : plotbl(basepath, manifest)
 if task=='pfnm' : plotfnm(basepath, manifest)
+if task=='ppes' : plotpes(basepath, manifest)
