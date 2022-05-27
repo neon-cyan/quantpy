@@ -48,7 +48,8 @@ else:
     try: os.makedirs(OUTDIR)
     except FileExistsError: pass
 
-    l202, xns = gj.parse(spin_dens=args.spindens, do_CI_States=True)
+    l202, xns , l405= gj.parse(spin_dens=args.spindens, do_CI_States=True)
+    print(l405)
     manifest['atomnos'] = l202['proton_nums']
     manifest['steps'] = len(xns)
 
@@ -60,7 +61,11 @@ else:
 
     # CI state compositions, energies, populations & stitches
     ci_composition = np.array([mathutils.MathUtils.dict_to_list(i[0]['cic']) for i in xns])    
-    ci_composition = np.array([[[mathutils.MathUtils.dict_to_list(j) for j in i] for i in ci_composition]])
+    print(f'CICOMPSHAPES = {ci_composition.shape}')
+    pop = lambda x, n: np.array([x[i] if i in x else 0.0 for i in range(n)])
+    ci_composition = np.array([[[pop(j, l405['n_basis']) for j in i] for i in ci_composition]])
+    print(f'CICOMPSHAPE = {ci_composition.shape}')
+
     cie_energies = np.array([[mathutils.MathUtils.dict_to_list(i[0]['cie']) for i in xns]]) 
     # print('CIESSHPE=', cie_energies.shape)
     adiabats = np.array([[mathutils.MathUtils.dict_to_list(i[0]['adiabats']) for i in xns]])    
