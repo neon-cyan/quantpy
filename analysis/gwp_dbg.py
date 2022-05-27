@@ -150,7 +150,7 @@ def plotcsf(basepath, manifest):
         times = np.load(os.path.join(basepath, 'times'))
         fig, ax = plt.subplots()
         for i in nms:
-            ax.plot(times, np.abs(rd[i]), label=f'CSF{i+1}')
+            ax.plot(times, np.square(np.abs(rd[i])), label=f'CSF{i+1}')
         ax.set_title(f'CSF population evolution (for GWP{g+1})')
         ax.set_ylabel('CSF population evolution')
         ax.set_xlabel('Time (fs)')
@@ -175,12 +175,45 @@ def plotci(basepath, manifest):
         times = np.load(os.path.join(basepath, 'times'))
         fig, ax = plt.subplots()
         for i in nms:
-            ax.plot(times, np.abs(rd[i]), label=f'CI{i+1}')
+            ax.plot(times, np.square(np.abs(rd[i])), label=f'CI{i+1}')
         ax.set_title(f'CI population evolution (for GWP{g+1})')
         ax.set_ylabel('CI population evolution')
         ax.set_xlabel('Time (fs)')
         ax.legend(loc='upper right')
         fig.savefig(os.path.join(basepath, f'dbg_ci_gwp{g+1}.png'))
+        if len(gwp) == 1 : plt.show()
+    print('Plot OK')
+
+def plotcsfv(basepath, manifest):
+    assert('csf' in manifest['quantities'])
+    print('Which GWP to plot? * for all')
+    raw_data = np.load(os.path.join(basepath, 'csf'))
+    gwp = input()
+    if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
+    else: gwp = [int(gwp)-1]
+
+    print('Which CSF vectors and labels? label1:0,0,1:label2:1,0,0')
+    nms = input()
+    to_plot={}
+    for i in nms.split('_'):
+        label, nums = i.split(':')
+        nums = [float(j) for j in nums.split(',')]
+        # assert(len(nums)==diabats.shape[1])
+        vect = np.array(nums)
+        to_plot[label] = vect / np.linalg.norm(vect)
+        # Normalize the vector
+
+    for g in gwp:
+        rd = raw_data[g]
+        times = np.load(os.path.join(basepath, 'times'))
+        fig, ax = plt.subplots()
+        for k,v in to_plot.items():
+            ax.plot(times, np.square(np.abs(rd.dot(v))), label=k)
+        ax.set_title(f'CSF/SD vector evolution (for GWP{g+1})')
+        ax.set_ylabel('CSF/SD vector population')
+        ax.set_xlabel('Time (fs)')
+        ax.legend(loc='upper right')
+        fig.savefig(os.path.join(basepath, f'dbg_csf_vect_gwp{g+1}.png'))
         if len(gwp) == 1 : plt.show()
     print('Plot OK')
 
@@ -288,6 +321,7 @@ if len(sys.argv) < 3:
     pnm = Plot normal modes [GWP-wise]
     pcsf = Plot csf populations [GWP-wise]
     pci = Plot ci populations [GWP-wise]
+    pcsfv = Plot ci vector [GWP-wise]
     pbl = Plot bond lengths [GWP-wise]
     pfnm = Plot gradient in normal modes
     ppes = Plot TD-PES [GWP-wise]
@@ -305,11 +339,13 @@ except:
 
 task = task.lower()
 if task=='qs' : find_probelm_gwps(basepath, manifest)
-if task=='pforce' : plotgwpforce(basepath, manifest)
-if task=='pcasde' : plotcascon(basepath, manifest)
-if task=='pnm' : plotnms(basepath, manifest)
-if task=='pcsf' : plotcsf(basepath, manifest)
-if task=='pci' : plotci(basepath, manifest)
-if task=='pbl' : plotbl(basepath, manifest)
-if task=='pfnm' : plotfnm(basepath, manifest)
-if task=='ppes' : plotpes(basepath, manifest)
+elif task=='pforce' : plotgwpforce(basepath, manifest)
+elif task=='pcasde' : plotcascon(basepath, manifest)
+elif task=='pnm' : plotnms(basepath, manifest)
+elif task=='pcsf' : plotcsf(basepath, manifest)
+elif task=='pci' : plotci(basepath, manifest)
+elif task=='pcsfv' : plotcsfv (basepath, manifest)
+elif task=='pbl' : plotbl(basepath, manifest)
+elif task=='pfnm' : plotfnm(basepath, manifest)
+elif task=='ppes' : plotpes(basepath, manifest)
+else: print('Invalid job!')

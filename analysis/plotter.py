@@ -234,17 +234,28 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
     elif cmd == 'CSFv':
-        diabats = np.load(os.path.join(basepath, 'csf_ave'))
+
+        diabats = np.load(os.path.join(basepath, 'csf'))
+        w = np.load(os.path.join(basepath, 'weights'))
+        
         # Expect a list of label:1,1,0,0_label:0,0,1,1
+        
         to_plot={}
         for i in ins.split('_'):
             label, nums = i.split(':')
             nums = [float(j) for j in nums.split(',')]
-            assert(len(nums)==diabats.shape[0])
-            to_plot[label] = np.array(nums)
+            # assert(len(nums)==diabats.shape[1])
+            vect = np.array(nums)
+            to_plot[label] = vect / np.linalg.norm(vect)
+            # Normalize the vector
         for k, v in to_plot.items():
-            data = np.dot(v, diabats)
+            data = diabats.dot(v)
+            # print(data.shape, w.shape)
+            # print(np.abs(data.T).shape, (w).shape)
+            data = np.array([np.abs(data.T)[i].dot(w[i]) for i in range(w.shape[0])])
+            data = np.square(data)
             axes[n].plot(times, data, label=k)
+
         axes[n].set_title('Diabatic [CSF] state vector evolution')
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
