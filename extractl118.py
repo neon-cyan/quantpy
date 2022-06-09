@@ -21,7 +21,7 @@ parser.add_argument('--glob', dest='glob', action='store_true',
 parser.add_argument('--spindens', dest='spindens', action='store_true',
                     help='Extract spin density')
 
-parser.add_argument('--stitcher', dest='stitch', action='store_true',
+parser.add_argument('--stitch', dest='stitch', action='store_true',
                     help='Stitch the CI pops & energies')
 args = parser.parse_args()
 print(args)
