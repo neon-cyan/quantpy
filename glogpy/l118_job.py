@@ -38,7 +38,7 @@ class l118_job(gaussian_job):
     def __init__(self, txt):
         super().__init__(txt)
 
-    def parse(self, print_info=True, spin_dens=False,do_CI_States=True):
+    def parse(self, print_info=True, spin_dens=False,do_CI_States=True, allow_truncate=False):
         l202_init = None
         for x in self.link_list:
             if x.number == 202 : 
@@ -60,10 +60,19 @@ class l118_job(gaussian_job):
         try:    l118s[0] = [l118s[0][1]]
         except IndexError: 
             l118s[0] = [l118s[0][0]]
-            print("You have missed the first step - perhaps you specified init velocity?")
+            print("You have missed the first L118 step - perhaps you specified init velocity?")
 
         l601s = filter(lambda x: x.number==601, self.link_list)
         l601_init, *l601s = [linkparsers.L601(x.text, spin_dens) for x in list(l601s)[:-1]]
+        if not (len(l510s) == len(l118s) == len(l601s)) and allow_truncate:
+            trunc = min([len(l118s) , len(l601s), len(l510s)])
+            print(f'Length of linklists is inconsistent!')
+            print(f'L510s = {len(l510s)} L118s= = {len(l118s)} L601s = {len(l601s)}')
+            print(f'Will truncate to the last {trunc} datapoints ONLY!')
+            l510s = l510s[-trunc:]
+            l118s = l118s[-trunc:]
+            l601s = l601s[-trunc:]
+
         assert(len(l510s) == len(l118s) == len(l601s)) # The number of in-loop links must be consistent
         xn = [(l510_init, [l118_init], l601_init)] + list(zip(l510s, l118s, l601s)) # Prepend the first step
 

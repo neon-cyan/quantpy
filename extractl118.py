@@ -23,6 +23,9 @@ parser.add_argument('--spindens', dest='spindens', action='store_true',
 
 parser.add_argument('--stitch', dest='stitch', action='store_true',
                     help='Stitch the CI pops & energies')
+
+parser.add_argument('--truncate', dest='allow_truncate', action='store_true',
+                    help='Allow for mismatched route links with a truncation')          
 args = parser.parse_args()
 print(args)
 
@@ -48,8 +51,8 @@ else:
     try: os.makedirs(OUTDIR)
     except FileExistsError: pass
 
-    l202, xns , l405= gj.parse(spin_dens=args.spindens, do_CI_States=True)
-    print(l405)
+    l202, xns , l405= gj.parse(spin_dens=args.spindens, do_CI_States=True, allow_truncate=args.allow_truncate)
+    # print(l405) => Looks like {'slater': True, 'n_basis': 10, 'ndel': 0}
     manifest['atomnos'] = l202['proton_nums']
     manifest['steps'] = len(xns)
 
@@ -61,10 +64,10 @@ else:
 
     # CI state compositions, energies, populations & stitches
     ci_composition = np.array([mathutils.MathUtils.dict_to_list(i[0]['cic']) for i in xns])    
-    print(f'CICOMPSHAPES = {ci_composition.shape}')
+    # print(f'CICOMPSHAPES = {ci_composition.shape}')
     pop = lambda x, n: np.array([x[i] if i in x else 0.0 for i in range(n)])
     ci_composition = np.array([[[pop(j, l405['n_basis']) for j in i] for i in ci_composition]])
-    print(f'CICOMPSHAPE = {ci_composition.shape}')
+    # print(f'CICOMPSHAPE = {ci_composition.shape}')
 
     cie_energies = np.array([[mathutils.MathUtils.dict_to_list(i[0]['cie']) for i in xns]]) 
     # print('CIESSHPE=', cie_energies.shape)
@@ -82,14 +85,14 @@ else:
     adiabats = adiabats[0]
 
     with open(os.path.join(OUTDIR, 'cies'), 'wb') as f:
-        np.save(f, cie_energies)
+        np.save(f, [cie_energies])
     manifest['quantities'].append('cies')
-    print(ci_composition.shape)
+    # print(ci_composition.shape)
     with open(os.path.join(OUTDIR, 'cicomp'), 'wb') as f:
         np.save(f, ci_composition)
     manifest['quantities'].append('cicomp')
     with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
-        print(adiabats.shape)
+        # print(adiabats.shape)
         np.save(f, abs(adiabats))
     manifest['quantities'].append('ci')
 
