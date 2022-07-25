@@ -221,6 +221,7 @@ def plotpes(basepath, manifest):
     assert('ci' in manifest['quantities'])
     print('Which GWP to plot?')
     raw_data = np.load(os.path.join(basepath, 'cies'))
+    print(raw_data)
     gwp = input()
     if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
     else: gwp = [int(gwp)-1]
