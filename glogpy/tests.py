@@ -1,8 +1,9 @@
 import unittest
 from glogpy.freqency_job import frequency_job as fj
 from glogpy.dynamics_job import dynamics_job as dj
-from glogpy.l118_job import l118_job
+from glogpy.l118_traj_job import l118_job
 from glogpy.job import gaussian_job
+from glogpy.jobio import gaussian_jobio
 
 class TestJobs(unittest.TestCase):
     # PART I : Test on a few different generic odd jobs
@@ -12,10 +13,21 @@ class TestJobs(unittest.TestCase):
             data = f.read()
         gaussian_job(data)
 
+    def test_aim_irc_io(self):
+        gaussian_jobio('glogpy/tests/ircaim.log')
+
     def test_isop_dft(self):
         with open('glogpy/tests/isop.log', 'r') as f:
             data = f.read()
         gaussian_job(data)
+
+    def test_isop_dft_io(self):
+        gaussian_jobio('glogpy/tests/isop.log')
+
+    # Test a partial IO job
+
+    def test_benz_partial_io(self):
+        gaussian_jobio('glogpy/tests/benzene_freq_partial.log',allow_partial=True)
 
     # PART II : Test frequency parser
 
@@ -80,28 +92,19 @@ class TestJobs(unittest.TestCase):
         ans = gj.parse(do_CI_States=True)
         # print(ans)
         self.assertDictEqual(ans['atomnos'],{1: 6, 2: 6, 3: 6, 4: 1, 5: 1, 6: 1, 7: 1})
-    # TEST IV : L118 test
 
-    def test_formaldehyde_l118(self, do_CI_States=False):
-        with open('glogpy/tests/methanal_s1_ts.log', 'r') as f:
-            data = f.read()
-        data = data.split('Initial command:\n')[3]
-        gj = l118_job(data)
-        ans = gj.parse()
+    # TEST IV : L118 tests
+    def test_formaldehyde_l118(self):
+        gj = l118_job('glogpy/tests/methanal_s1_ts.log')
+        ans = gj.parse(print_info=False)
 
-    def test_formaldehyde_l118_withCIMat(self, do_CI_States=True):
-        with open('glogpy/tests/methanal_s1_ts.log', 'r') as f:
-            data = f.read()
-        data = data.split('Initial command:\n')[3]
-        gj = l118_job(data)
-        ans = gj.parse()
+    def test_formaldehyde_l118_partial(self):
+        gj = l118_job('glogpy/tests/methanal_s1_partial.log', allow_partial=True)
+        ans = gj.parse(print_info=False, allow_truncate=True)
 
     def test_isop_l118_spindens(self):
-        with open('glogpy/tests/isoprop_sd.log', 'r') as f:
-            data = f.read()
-        data = data.split('Initial command:\n')[3]
-        gj = l118_job(data)
-        ans = gj.parse(spin_dens=True)
+        gj = l118_job('glogpy/tests/isoprop_sd.log')
+        ans = gj.parse(print_info=False)
 
 if __name__ == '__main__':
     unittest.main()
