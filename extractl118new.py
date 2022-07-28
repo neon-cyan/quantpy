@@ -103,8 +103,8 @@ else:
     manifest['quantities'].append('xyz')
 
     nucde = [i[1]['etot']for i in xns]
-    nucke = [i[1]['etot']for i in xns]
-    nucpe = [i[1]['etot']for i in xns]
+    nucke = [i[1]['ekin']for i in xns]
+    nucpe = [i[1]['epot']for i in xns]
     with open(os.path.join(OUTDIR, 'nucde'), 'wb') as f:
         np.save(f, nucde)
     with open(os.path.join(OUTDIR, 'nucke'), 'wb') as f:

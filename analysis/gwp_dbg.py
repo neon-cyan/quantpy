@@ -221,7 +221,7 @@ def plotpes(basepath, manifest):
     assert('ci' in manifest['quantities'])
     print('Which GWP to plot?')
     raw_data = np.load(os.path.join(basepath, 'cies'))
-    print(raw_data)
+    # print(raw_data.shape)
     gwp = input()
     if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
     else: gwp = [int(gwp)-1]
@@ -230,7 +230,7 @@ def plotpes(basepath, manifest):
     nms = input()
     nms = [int(i)-1 for i in nms.split(',')]
     for g in gwp:
-        rd = raw_data[g].T
+        rd = raw_data[g]
         times = np.load(os.path.join(basepath, 'times'))
         fig, ax = plt.subplots()
         for i in nms:
@@ -313,6 +313,34 @@ def plotfnm(basepath, manifest):
         if len(gwp) == 1 : plt.show()
     print('Plot OK')
 
+def plotl118e(basepath, manifest):
+    assert('nucde' in manifest['quantities'])
+    assert(manifest['method'] == 'l118')
+    fig, axes = plt.subplots(1, 3, figsize=(21,5))
+
+    times = np.load(os.path.join(basepath, 'times'))
+    nucde = np.load(os.path.join(basepath, 'nucde'))
+    nucke = np.load(os.path.join(basepath, 'nucke'))
+    nucpe = np.load(os.path.join(basepath, 'nucpe'))
+
+    axes[0].plot(times, nucde)
+    axes[0].set_title('Total energy')
+    axes[0].set_ylabel('Energy / Ha')
+    axes[0].set_xlabel('Time (fs)')
+
+    axes[1].plot(times, nucke)
+    axes[1].set_title('Kinetic energy')
+    axes[1].set_ylabel('Energy / Ha')
+    axes[1].set_xlabel('Time (fs)')
+
+    axes[2].plot(times, nucpe)
+    axes[2].set_title('Potential energy')
+    axes[2].set_ylabel('Energy / Ha')
+    axes[2].set_xlabel('Time (fs)')
+    fig.tight_layout()
+    fig.savefig(os.path.join(basepath, f'L118_Energies.png'))
+    print('Plot OK')
+
 if len(sys.argv) < 3:
     print(f'Use {sys.argv[0]} path/to/manifest.json task')
     print('''Availble tasks:
@@ -326,6 +354,7 @@ if len(sys.argv) < 3:
     pbl = Plot bond lengths [GWP-wise]
     pfnm = Plot gradient in normal modes
     ppes = Plot TD-PES [GWP-wise]
+    pl118e = Plot the L118 nucelar energies (EKin / EPot / ETot)
     ''')
     sys.exit(-1)
 
@@ -349,4 +378,6 @@ elif task=='pcsfv' : plotcsfv (basepath, manifest)
 elif task=='pbl' : plotbl(basepath, manifest)
 elif task=='pfnm' : plotfnm(basepath, manifest)
 elif task=='ppes' : plotpes(basepath, manifest)
+elif task=='pl118e' : plotl118e(basepath, manifest)
+
 else: print('Invalid job!')
