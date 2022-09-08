@@ -7,6 +7,7 @@ import numpy as np
 
 class linkparsers():
     def L118(txt):
+        # TODO Support L118 RK4 with substeps
         # Step one - split the block into TRJ-TRJ-TRJ sections
         trjlines = []
         for i, ln in enumerate(txt):
@@ -15,7 +16,7 @@ class linkparsers():
         assert(len(trjlines) % 2 == 0)
         # print(trjlines)
         if len(trjlines) == 2 : trjlines = [trjlines]
-        else: trjlines = np.reshape(trjlines, (2, int(len(trjlines)/2)))
+        else: trjlines = np.reshape(trjlines, (int(len(trjlines)/2), 2))
         # print(trjlines)
         # Step 2 : loop over the L118 TRJ blocks
         l118_steps = []
@@ -314,11 +315,13 @@ class linkparsers():
     def L405(txt):
         import re
         d= {'slater' : False}
+        d['n_basis'] = 0
         for ln in txt:
+            # print(ln)
             if 'SLATER DETERMINANT BASIS' in ln:
                 d['slater'] = True
-            if 'NO OF BASIS FUNCTIONS' in ln:
-                d['n_basis'], d['ndel'] = [int(x) for x in re.findall('\d{1,}', ln)]
+            if 'Configuration' in ln:
+                d['n_basis'] = max(int(ln.split()[1]), d['n_basis']) # More robust -> deal with GVB
         return d
 
     def L510_TD(txt, do_CI_States=False):

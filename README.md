@@ -1,14 +1,14 @@
 # quantpy
-quantpy is a link-wise gaussian and quantics parser, with a focus on Ehrenfest-dynamics simulations
+quantpy is a link-wise gaussian and quantics parser, with a focus on Ehrenfest-dynamics simulations using either QUANTICS or L118
 
 ### Features
-Built-in flexible link-wise gaussian parser (glogpy) - may wish to factor this out as a submodule in future
+Built-in flexible link-wise gaussian route parser (glogpy)
+A few link parsers have been written (Focus on L405, L510)
 Rudimentary quantics input + output parsers
 
-Extraction script drops numpy array binaries - GWP scaled and raw - for manipulating & plotting as needed
-
-### Running extractor
+### Setup
 Recommended to set up a virtual python enviroment (conda or venv)
+
 Install requirements : 
 
 ```
@@ -21,13 +21,22 @@ Add the folder dir to PYTHONPATH :
 export PYTHONPATH=$PYTHONPATH:/path/to/dir
 ```
 
-Read the analysis script help with 
+### Running extractor
+Extraction yields a maniest and set of numpy binaries with extracted data
+
+For a quantics job use
 
 ```
-python3 extract.py --h
+python3 extract.py /path/to/quantics.inp
 ```
 
-### Visualisations
+For a L118 job use
+
+```
+python3 extractl118new.py /path/to/l118.log
+```
+
+### Analysis tools
 These scripts are found in analysis folder
 
 - pairplot_sd_mq - Plots up all the spin densities (or mulliken charges) in pairs
@@ -36,9 +45,9 @@ These scripts are found in analysis folder
 - to_xyz - Generate a trajectory xyz file for VMD
 
 ## TODO
-Missing a few things from old scripts - these are all on the todo list:
+Still missing a few things from old scripts - these are all on the todo list:
 
-- [GWPDBG] Missing some of the single-GWP analysis (DiAangle / Etot / Eall / SpinDens / MaxF to NM)
 - [GWPDBG] Like to refactor bulk per-GWP plotter into single one
+- [QEXTRACT] Like to move quantics extractor to use new IO jobs
 - [PLOTTER] Plot up dipoles. Hopefully coord system is OK
 - [PLOTTER] Plot up Hole Survival Probability

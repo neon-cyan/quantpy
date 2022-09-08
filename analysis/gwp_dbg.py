@@ -15,6 +15,9 @@ ATOMICLABELS = ['H',  'He',  'Li',  'Be',  'B',  'C',  'N',  'O',  'F',  'Ne',  
     'Ac',  'Th',  'Pa',  'U',  'Np',  'Pu',  'Am',  'Cm',  'Bk',  'Cf',  'Es',  'Fm',  'Md',  'No',  'Lr',  'Rf',  'Db',  'Sg', 
     'Bh',  'Hs',  'Mt',  'Ds',  'Rg',  'Cn',  'Nh',  'Fl',  'Mc',  'Lv',  'Ts',  'Og'] # Yes *all* of the elements
 
+def get_nth_col(idx):
+    cols =['#e6194B', '#3cb44b', '#FFC800', '#4363d8', '#f58231', '#42d4f4', '#f032e6', '#fabed4', '#469990', '#dcbeff', '#9A6324', '#800000', '#aaffc3', '#000075', '#a9a9a9']
+    return cols[idx%len(cols)]
 
 # General probelm-GWP-finding function
 
@@ -130,6 +133,7 @@ def plotnms(basepath, manifest):
         ax.set_ylabel('Normal mode evolution')
         ax.set_xlabel('Time (fs)')
         ax.legend(loc='upper right')
+        fig.tight_layout()
         fig.savefig(os.path.join(basepath, f'dbg_nms_gwp{g+1}.png'))
         if len(gwp) == 1 : plt.show()
     print('Plot OK')
@@ -155,6 +159,7 @@ def plotcsf(basepath, manifest):
         ax.set_ylabel('CSF population evolution')
         ax.set_xlabel('Time (fs)')
         ax.legend(loc='upper right')
+        fig.tight_layout()
         fig.savefig(os.path.join(basepath, f'dbg_csf_gwp{g+1}.png'))
         if len(gwp) == 1 : plt.show()
     print('Plot OK')
@@ -175,11 +180,12 @@ def plotci(basepath, manifest):
         times = np.load(os.path.join(basepath, 'times'))
         fig, ax = plt.subplots()
         for i in nms:
-            ax.plot(times, np.square(np.abs(rd[i])), label=f'CI{i+1}')
+            ax.plot(times, np.square(np.abs(rd[i])), label=f'CI{i+1}', color=get_nth_col(i))
         ax.set_title(f'CI population evolution (for GWP{g+1})')
         ax.set_ylabel('CI population evolution')
         ax.set_xlabel('Time (fs)')
         ax.legend(loc='upper right')
+        fig.tight_layout()
         fig.savefig(os.path.join(basepath, f'dbg_ci_gwp{g+1}.png'))
         if len(gwp) == 1 : plt.show()
     print('Plot OK')
@@ -213,6 +219,7 @@ def plotcsfv(basepath, manifest):
         ax.set_ylabel('CSF/SD vector population')
         ax.set_xlabel('Time (fs)')
         ax.legend(loc='upper right')
+        fig.tight_layout()
         fig.savefig(os.path.join(basepath, f'dbg_csf_vect_gwp{g+1}.png'))
         if len(gwp) == 1 : plt.show()
     print('Plot OK')
@@ -221,6 +228,7 @@ def plotpes(basepath, manifest):
     assert('ci' in manifest['quantities'])
     print('Which GWP to plot?')
     raw_data = np.load(os.path.join(basepath, 'cies'))
+    # print(raw_data.shape)
     gwp = input()
     if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
     else: gwp = [int(gwp)-1]
@@ -233,11 +241,12 @@ def plotpes(basepath, manifest):
         times = np.load(os.path.join(basepath, 'times'))
         fig, ax = plt.subplots()
         for i in nms:
-            ax.plot(times, rd[i], label=f'CI{i+1}')
+            ax.plot(times, rd[i], label=f'CI{i+1}', color=get_nth_col(i))
         ax.set_title(f'TD-PES (for GWP{g+1})')
         ax.set_ylabel('Energy / Ha')
         ax.set_xlabel('Time (fs)')
         ax.legend(loc='upper right')
+        fig.tight_layout()
         fig.savefig(os.path.join(basepath, f'dbg_pes_gwp{g+1}.png'))
         if len(gwp) == 1 : plt.show()
     print('Plot OK')
@@ -275,6 +284,7 @@ def plotbl(basepath, manifest):
         ax.set_ylabel('Bond length (Å)')
         ax.set_xlabel('Time (fs)')
         ax.legend(loc='upper right')
+        fig.tight_layout()
         fig.savefig(os.path.join(basepath, f'dbg_bl_gwp{g+1}.png'))
         if len(gwp) == 1 : plt.show()
     print('Plot OK')
@@ -312,6 +322,34 @@ def plotfnm(basepath, manifest):
         if len(gwp) == 1 : plt.show()
     print('Plot OK')
 
+def plotl118e(basepath, manifest):
+    assert('nucde' in manifest['quantities'])
+    assert(manifest['method'] == 'l118')
+    fig, axes = plt.subplots(1, 3, figsize=(21,5))
+
+    times = np.load(os.path.join(basepath, 'times'))
+    nucde = np.load(os.path.join(basepath, 'nucde'))
+    nucke = np.load(os.path.join(basepath, 'nucke'))
+    nucpe = np.load(os.path.join(basepath, 'nucpe'))
+
+    axes[0].plot(times, nucde)
+    axes[0].set_title('Total energy')
+    axes[0].set_ylabel('Energy / Ha')
+    axes[0].set_xlabel('Time (fs)')
+
+    axes[1].plot(times, nucke)
+    axes[1].set_title('Kinetic energy')
+    axes[1].set_ylabel('Energy / Ha')
+    axes[1].set_xlabel('Time (fs)')
+
+    axes[2].plot(times, nucpe)
+    axes[2].set_title('Potential energy')
+    axes[2].set_ylabel('Energy / Ha')
+    axes[2].set_xlabel('Time (fs)')
+    fig.tight_layout()
+    fig.savefig(os.path.join(basepath, f'L118_Energies.png'))
+    print('Plot OK')
+
 if len(sys.argv) < 3:
     print(f'Use {sys.argv[0]} path/to/manifest.json task')
     print('''Availble tasks:
@@ -325,6 +363,7 @@ if len(sys.argv) < 3:
     pbl = Plot bond lengths [GWP-wise]
     pfnm = Plot gradient in normal modes
     ppes = Plot TD-PES [GWP-wise]
+    pl118e = Plot the L118 nucelar energies (EKin / EPot / ETot)
     ''')
     sys.exit(-1)
 
@@ -348,4 +387,6 @@ elif task=='pcsfv' : plotcsfv (basepath, manifest)
 elif task=='pbl' : plotbl(basepath, manifest)
 elif task=='pfnm' : plotfnm(basepath, manifest)
 elif task=='ppes' : plotpes(basepath, manifest)
+elif task=='pl118e' : plotl118e(basepath, manifest)
+
 else: print('Invalid job!')

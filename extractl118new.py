@@ -1,4 +1,4 @@
-from glogpy.l118_job import l118_job
+from glogpy.l118_traj_job import l118_job
 from mathutils import Stitcher
 import argparse
 import sys, os
@@ -8,23 +8,23 @@ import json
 
 MANIFEST_NAME='manifest.json'
 
-parser = argparse.ArgumentParser(description='logall extractor')
+parser = argparse.ArgumentParser(description='L118 Eh job extractor')
 parser.add_argument('log', type=str,
                     help='Path to L118 log file, or if --glob is set, a glob expression')
 
-parser.add_argument('--adir', type=str, default='analysis',
+parser.add_argument('-a','--adir', type=str, default='analysis',
                     help='Where to put the extracted data files [defaults to LOGDIR/analysis]')
 
 parser.add_argument('--glob', dest='glob', action='store_true',
-                    help='Instead of a single file use a ')
+                    help='Instead of a single file use a glob for multiple trajectories [NYI]')
 
-parser.add_argument('--spindens', dest='spindens', action='store_true',
-                    help='Extract spin density')
+parser.add_argument('-s','--stitch', dest='stitch', action='store_true',
+                    help='Stitch the CI pops & energies to maintain state charecter throughout')
 
-parser.add_argument('--stitch', dest='stitch', action='store_true',
-                    help='Stitch the CI pops & energies')
+parser.add_argument('-t','--truncate', dest='allow_truncate', action='store_true',
+                    help='Allow for mismatched route links (Allows parsing of partial logs)')          
 args = parser.parse_args()
-print(args)
+# print(args)
 
 manifest = {}
 manifest['method'] = 'l118'
@@ -38,33 +38,30 @@ if args.glob:
 else:
     LOGFILE = args.log
     assert(os.path.exists(LOGFILE))
-
-    with open(LOGFILE, 'r') as f:
-        data = f.read()
-    data = data.split('Initial command:\n')[-1] # Assume the L118 job is the last
-    gj = l118_job(data)
+    gj = l118_job(LOGFILE, allow_partial=args.allow_truncate)
 
     OUTDIR = args.adir if args.adir[0] == '/' else os.path.join(os.path.dirname(LOGFILE), f'{LOGFILE}.{args.adir}')
     try: os.makedirs(OUTDIR)
     except FileExistsError: pass
 
-    l202, xns , l405= gj.parse(spin_dens=args.spindens, do_CI_States=True)
-    print(l405)
+    l202, xns , l405= gj.parse(allow_truncate=args.allow_truncate)
+    # print(l405) => Looks like {'slater': True, 'n_basis': 10, 'ndel': 0}
     manifest['atomnos'] = l202['proton_nums']
     manifest['steps'] = len(xns)
 
     # save times
-    times = np.array([i[1][0]['time'] for i in xns])
+    times = np.array([i[1]['time'] for i in xns])
     with open(os.path.join(OUTDIR, 'times'), 'wb') as f:
         np.save(f, times)
     manifest['quantities'].append('t')
 
     # CI state compositions, energies, populations & stitches
     ci_composition = np.array([mathutils.MathUtils.dict_to_list(i[0]['cic']) for i in xns])    
-    print(f'CICOMPSHAPES = {ci_composition.shape}')
+    # print(f'CICOMPSHAPES = {ci_composition.shape}')
     pop = lambda x, n: np.array([x[i] if i in x else 0.0 for i in range(n)])
+    # print(l405)
     ci_composition = np.array([[[pop(j, l405['n_basis']) for j in i] for i in ci_composition]])
-    print(f'CICOMPSHAPE = {ci_composition.shape}')
+    # print(f'CICOMPSHAPE = {ci_composition.shape}')
 
     cie_energies = np.array([[mathutils.MathUtils.dict_to_list(i[0]['cie']) for i in xns]]) 
     # print('CIESSHPE=', cie_energies.shape)
@@ -82,14 +79,14 @@ else:
     adiabats = adiabats[0]
 
     with open(os.path.join(OUTDIR, 'cies'), 'wb') as f:
-        np.save(f, cie_energies)
+        np.save(f, [cie_energies.T])
     manifest['quantities'].append('cies')
-    print(ci_composition.shape)
+    # print(ci_composition.shape)
     with open(os.path.join(OUTDIR, 'cicomp'), 'wb') as f:
         np.save(f, ci_composition)
     manifest['quantities'].append('cicomp')
     with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
-        print(adiabats.shape)
+        # print(adiabats.shape)
         np.save(f, abs(adiabats))
     manifest['quantities'].append('ci')
 
@@ -100,12 +97,37 @@ else:
     manifest['quantities'].append('csf')
 
     # save xyz
-    xyz = np.array([mathutils.MathUtils.dict_to_list(i[1][0]['geom']) for i in xns])
+    xyz = np.array([mathutils.MathUtils.dict_to_list(i[1]['geom']) for i in xns])
     with open(os.path.join(OUTDIR, 'xyz_ave'), 'wb') as f:
         np.save(f, xyz)
     manifest['quantities'].append('xyz')
 
-    if args.spindens:
+    nucde = [i[1]['etot']for i in xns]
+    nucke = [i[1]['ekin']for i in xns]
+    nucpe = [i[1]['epot']for i in xns]
+    with open(os.path.join(OUTDIR, 'nucde'), 'wb') as f:
+        np.save(f, nucde)
+    with open(os.path.join(OUTDIR, 'nucke'), 'wb') as f:
+        np.save(f, nucke)
+    with open(os.path.join(OUTDIR, 'nucpe'), 'wb') as f:
+        np.save(f, nucpe)    
+    manifest['quantities'].append('nucde')
+
+    # print(xns[0])
+
+    if 'mulliken_sum' in xns[0][2]:
+        manifest['mqmap'] = list(xns[0][2]['mulliken_sum'].keys())
+        mq_new = np.zeros((manifest['steps'], len(manifest['mqmap'])))
+        for i, d in enumerate([i[2]['mulliken_sum'] for i in xns]):
+
+            newlist = [d[j] for j in manifest['mqmap']]
+            mq_new[i] = newlist
+
+        with open(os.path.join(OUTDIR, 'mq_ave'), 'wb') as f:
+            np.save(f, mq_new.T)
+        manifest['quantities'].append('mq')
+
+    if 'spinden_sum' in xns[0][2]:
         manifest['spindenmap'] = list(xns[0][2]['spinden_sum'].keys())
         sd_new = np.zeros((manifest['steps'], len(manifest['spindenmap'])))
         for i, d in enumerate([i[2]['spinden_sum'] for i in xns]):
