@@ -31,6 +31,13 @@ class TestJobs(unittest.TestCase):
 
     # PART II : Test frequency parser
 
+    def test_freq_job_ketene_casscf(self):
+        with open('glogpy/tests/ketene_cas_freq.log', 'r') as f:
+            data = f.read()
+        data=data.split('Initial command:')[-1]
+        gj = fj(data)
+        ans = gj.parse()
+
     def test_freq_job_o2_nosymm(self):
         with open('glogpy/tests/o2_freq.log', 'r') as f:
             data = f.read()

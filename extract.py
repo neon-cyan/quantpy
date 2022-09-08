@@ -75,9 +75,20 @@ with open(QINP, 'r') as f:
 q_inp_data=QuanticsParsers.parse_input(data)
 print(f'QINP file parsed')
 
+
 # Quick check that the output path exists
 datadir = os.path.join(os.path.dirname(QINP), q_inp_data['data'])
 assert(os.path.exists(datadir))
+
+# Parse the freq file here [before costly logalls]
+freqf = os.path.join(datadir, q_inp_data['freqf'])
+assert(os.path.exists(freqf))
+with open(freqf, 'r') as f:
+    data = f.read()
+data = data.split('Initial command:\n')[-1] # Assume the freq job is the last
+freq = frequency_job(data)
+freq_data = freq.parse()
+print(f'FREQ file parsed')
 
 # Load up quantics output file & clean up needed properties
 qoutf = os.path.join(os.path.dirname(QINP), q_inp_data['name'], 'output')
@@ -110,15 +121,6 @@ print(f'LOGALL files parsed')
 
 
 if 'nm' in args.tasks or 'xyz' in args.tasks:
-    #  Load up frequency file
-    freqf = os.path.join(datadir, q_inp_data['freqf'])
-    assert(os.path.exists(freqf))
-    with open(freqf, 'r') as f:
-        data = f.read()
-    freq = frequency_job(data)
-    freq_data = freq.parse()
-    print(f'FREQ file parsed')
-
     # Need to clean up the geom -> compute normal modes
     geom_init = mathutils.MathUtils.dict_to_list(freq_data['geom'])
     geom_init = np.array([x[1] for x in geom_init])
