@@ -5,31 +5,50 @@ import os
 import json
 
 if len(sys.argv) < 5:
-    print(f"""Not enough arguemnts!\n Use : {sys.argv[0]}
-    [/path/manifest.json] 
+    print(f"""
+    Not enough arguments!
+    Use : {sys.argv[0]} [/path/manifest.json] [GRAPHS] [width/panel, height] [Output x11 | filename.png]
 
-    *** GEOMETRIC ***
-    => [BL=1-2,2-3]
-    => [PBL=1-2,2-3]
-    => [NM=1,2,3]
-    => [BA=1-2-3]
-    => [DA=1-2-3-4]
+    Where graphs can be a space seperated list of any of
 
-    *** ELECTRONIC ***
-    => [CIs=A|1,2,3]
-    => [CSFs=A|1,2,3]
-    => [CSFv=label:1,1,0,0_label:0,0,1,1]   [Averaged then weighted]
-    => [CSFv2=label:1,1,0,0_label:0,0,1,1]  [Weighted the pre-averaged]
-    => [AVCSFs=A|1,2,3:av_window]
-    => [AVCSFv=av_window_label:1,0,0_label:0,0,1]
-    => [SD=A|1,2]
-    => [MQ=A|1,2]
-    => [HM=sd|mq:atom_num:nbins:min_y:max_y]
+    ** BOND LENGTHS **
+    => BL=[A]-[B],[C]-[D]                           - At least one dash seperated atom number pair
+    => PBL=[A]-[B],[C]-[D]                          - At least one dash seperated atom number pair
+
+    ** BOND ANGLES **
+    => BA=[A]-[B]-[C],[A]-[B]-[D]                   - At least one dash seperated atom number trio
+    => PBA=[A]-[B]-[C],[A]-[B]-[D]                  - At least one dash seperated atom number trio
+
+    ** DIHEDRAL ANGLE **
+    => DA=[A]-[B]-[C]-[D],[A]-[B]-[C]-[E]           - At least one dash seperated atom number quartet
+
+    ** VIBRATIONAL NORMAL MODE **
+    => NM=[A],[B],[C]                               - Comma seperated list of at least one NM
+
+    ** CI POPULATION **
+    => CIs=[A|1,2,3]                                - Comma seperated list of at least one CI number or A for all
+
+    ** CSF/SD POPULATION **
+    => CSFs=[A|1,2,3]                               - Comma seperated list of at least one CSF/SD number or A for all
+    => CSFv=[label:1,1,0,0_label:0,0,1,1]           - At least one label and real vector of length CSF [Averaged then weighted]
+    => CSFv2=[label:1,1,0,0_label:0,0,1,1]          - At least one label and real vector of length CSF [Weighted the pre-averaged]
+    => AVCSFs=[A|1,2,3:av_window]                   - Comma seperated list of at least one CSF/SD number or A for all and average window size
+    => AVCSFv=[av_window_label:1,0,0_label:0,0,1]   - Average window size, at least one label and real vector of length CSF [Weighted the pre-averaged]
+
+    ** SPIN DENSITY AND MULLIKEN CHARGE (+ HEAT MAPS) **
+    => SD=[A|1,2]                                   - At least one atom number or A for all
+    => MQ=[A|1,2]                                   - At least one atom number or A for all
+    => HM=[sd|mq:atom_num:nbins:min_y:max_y]        - Either spin density XOR mulliken charge, comma seperated lsit of atoms (or A for all)
     
-    *** DISCRETE FOURIER TRANSFORMS ***
-    => [FFT=cd|mq|csf(+|-|p):CHOP:1,2,3|A:[ZOOM_RANGE/None]]
-    [width/panel, height]
-    [Output x11 | filename.png]
+    ** FOURIER TRANSFORMS **
+    => FFT=[sd|mq|csf][+/-/2/p]:CHOP:SELECTOR:RANGE
+    ===> + will do phase modulation (up/down)
+    ===> - will do cosine zero-to-zero correction
+    ===> 2 will square (power spectra)
+    ===> p will do a pair phase plot
+    ===> The CHOP will discard first CHOP FFT datapoints (close to zero freq)
+    ===> The selector refers to either atoms or CSFs comma seperated list or A for all
+    ===> Range is either None or given as min,max (auto * 1E15)
     """)
     sys.exit(0)
 
