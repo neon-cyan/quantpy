@@ -198,7 +198,7 @@ def plotcsfv(basepath, manifest):
     if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
     else: gwp = [int(gwp)-1]
 
-    print('Which CSF vectors and labels? label1:0,0,1:label2:1,0,0')
+    print('Which CSF vectors and labels? label1:0,0,1_label2:1,0,0')
     nms = input()
     to_plot={}
     for i in nms.split('_'):

@@ -42,7 +42,7 @@ class l118_job(gaussian_jobio):
         if print_info: print(f'Parsed the first L405 OK')
 
         # Need to decide if spindens is available
-        spin_dens = False not in [71 in x.iops for x in l510s]
+        spin_dens = False not in [72 in x.iops for x in l510s]
         if print_info: print('{}'.format('Spin denisty will be extracted' if spin_dens else '72=1 not set in L510 => No Spin Density'))
 
         # Check how many steps to parse
