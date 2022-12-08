@@ -30,8 +30,7 @@ if len(sys.argv) < 5:
 
     ** CSF/SD POPULATION **
     => CSFs=[A|1,2,3]                               - Comma seperated list of at least one CSF/SD number or A for all
-    => CSFv=[label:1,1,0,0_label:0,0,1,1]           - At least one label and real vector of length CSF [Averaged then weighted]
-    => CSFv2=[label:1,1,0,0_label:0,0,1,1]          - At least one label and real vector of length CSF [Weighted the pre-averaged]
+    => CSFv=[label:1,1,0,0_label:0,0,1,1]           - At least one label and real vector of length CSF
     => AVCSFs=[A|1,2,3:av_window]                   - Comma seperated list of at least one CSF/SD number or A for all and average window size
     => AVCSFv=[av_window_label:1,0,0_label:0,0,1]   - Average window size, at least one label and real vector of length CSF [Weighted the pre-averaged]
 
@@ -254,35 +253,8 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
     elif cmd == 'CSFv':
-
-        diabats = np.load(os.path.join(basepath, 'csf'))
-        w = np.load(os.path.join(basepath, 'weights'))
-        
-        # Expect a list of label:1,1,0,0_label:0,0,1,1
-        
-        to_plot={}
-        for i in ins.split('_'):
-            label, nums = i.split(':')
-            nums = [float(j) for j in nums.split(',')]
-            # assert(len(nums)==diabats.shape[1])
-            vect = np.array(nums)
-            to_plot[label] = vect / np.linalg.norm(vect)
-            # Normalize the vector
-        for k, v in to_plot.items():
-            data = diabats.dot(v)
-            # print(data.shape, w.shape)
-            # print(np.abs(data.T).shape, (w).shape)
-            data = np.array([np.abs(data.T)[i].dot(w[i]) for i in range(w.shape[0])])
-            data = np.square(data)
-            axes[n].plot(times, data, label=k)
-
-        axes[n].set_title('Diabatic [CSF] state vector evolution')
-        axes[n].set_ylabel('State population')
-        axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
-
-    elif cmd == 'CSFv2':
-        diabats = np.load(os.path.join(basepath, 'csf_ave'))
+        diabats = np.load(os.path.join(basepath, 'zcsf'))
+        # print(diabats.shape)
         # Expect a list of label:1,1,0,0_label:0,0,1,1
         to_plot={}
         for i in ins.split('_'):
@@ -293,7 +265,7 @@ for n, c in enumerate(commands):
             to_plot[label] = vect / np.linalg.norm(vect)
             # Normalize the vector
         for k, v in to_plot.items():
-            data = diabats.T.dot(v)
+            data = np.abs(diabats.T.dot(v))
             axes[n].plot(times, data, label=k)
 
         axes[n].set_title('Diabatic [CSF] state vector evolution')
@@ -331,7 +303,7 @@ for n, c in enumerate(commands):
             assert(len(nums)==diabats.shape[0])
             to_plot[label] = np.array(nums)
         mavs = np.array([mathutils.MathUtils.moving_avg(i, av_window) for i in diabats])
-        print(mavs.shape)
+        # print(mavs.shape)
         for k, v in to_plot.items():
             data = np.dot(v, mavs)
             axes[n].plot(times[:len(data)], data, label=k)

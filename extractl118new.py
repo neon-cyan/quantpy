@@ -60,40 +60,43 @@ else:
     # print(f'CICOMPSHAPES = {ci_composition.shape}')
     pop = lambda x, n: np.array([x[i] if i in x else 0.0 for i in range(n)])
     # print(l405)
-    ci_composition = np.array([[[pop(j, l405['n_basis']) for j in i] for i in ci_composition]])
+    ci_composition = np.array([[[pop(j, l405['n_basis']) for j in i] for i in ci_composition]]).transpose((0,2,1,3))
     # print(f'CICOMPSHAPE = {ci_composition.shape}')
 
-    cie_energies = np.array([[mathutils.MathUtils.dict_to_list(i[0]['cie']) for i in xns]]) 
+    cie_energies = np.array([[mathutils.MathUtils.dict_to_list(i[0]['cie']) for i in xns]]).transpose((0,2,1))
     # print('CIESSHPE=', cie_energies.shape)
+
     adiabats = np.array([[mathutils.MathUtils.dict_to_list(i[0]['adiabats']) for i in xns]])    
-    adiabats = adiabats[:,:,:cie_energies.shape[2]].transpose(0,2,1)
+    adiabats = adiabats[:,:,:cie_energies.shape[1]].transpose(0,2,1)
     # print(adiabats)
     # print('ADBTS = ', adiabats.shape)
     if args.stitch:
-        stitches = Stitcher.compute(ci_composition.transpose((0,2,1,3)))
-        ci_composition = Stitcher.run(ci_composition.transpose((0,2,1,3)), stitches)[0]
-        cie_energies = Stitcher.run(cie_energies.transpose((0,2,1)),stitches)[0]
+        stitches = Stitcher.compute(ci_composition)
+        ci_composition = Stitcher.run(ci_composition, stitches)
+        cie_energies = Stitcher.run(cie_energies,stitches)
         adiabats = Stitcher.run(adiabats,stitches)
         manifest['stitched'] = True
 
-    adiabats = adiabats[0]
-
     with open(os.path.join(OUTDIR, 'cies'), 'wb') as f:
-        np.save(f, [cie_energies.T])
+        np.save(f, [cie_energies[0].T])
     manifest['quantities'].append('cies')
     # print(ci_composition.shape)
     with open(os.path.join(OUTDIR, 'cicomp'), 'wb') as f:
         np.save(f, ci_composition)
     manifest['quantities'].append('cicomp')
+
     with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
-        # print(adiabats.shape)
-        np.save(f, abs(adiabats))
+        np.save(f, np.abs(adiabats[0]))
+    with open(os.path.join(OUTDIR, 'zci'), 'wb') as f:
+        np.save(f, adiabats[0])
     manifest['quantities'].append('ci')
 
     # save CSF pop
     diabats = np.abs(np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])).T
     with open(os.path.join(OUTDIR, 'csf_ave'), 'wb') as f:
         np.save(f, diabats)
+    with open(os.path.join(OUTDIR, 'zcsf'), 'wb') as f:
+        np.save(f, np.array([np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])])[0].T)
     manifest['quantities'].append('csf')
 
     # save xyz

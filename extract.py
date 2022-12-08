@@ -150,11 +150,18 @@ def weightscale_sq(datax, weight, ns):
             datax_ave[i,x] = np.square(abs(datax[i, x]).dot(weight[x]))
     return datax_ave
 
-def weightscale(datax, weight, ns):
-    datax_ave = np.zeros([datax.shape[0], ns]) # [NDIABATS x NSTEPS]
+def weightscale(datax, weight, ns, do_abs=True):
+    if do_abs:
+        datax_ave = np.zeros([datax.shape[0], ns]) # [NDIABATS x NSTEPS]
+    else:
+        datax_ave = np.zeros([datax.shape[0], ns], dtype=np.cdouble) # [NDIABATS x NSTEPS]
+
     for i in range(datax_ave.shape[0]):
         for x in range(nsteps):
-            datax_ave[i,x] = abs(datax[i, x]).dot(weight[x])
+            if do_abs:
+                datax_ave[i,x] = abs(datax[i, x]).dot(weight[x])
+            else: 
+                datax_ave[i,x] = datax[i, x].dot(weight[x])
     return datax_ave
 
 cipops = data_gwpx['adiabats'].transpose(2,1,0)[:data_gwpx['cic'].shape[2]]
@@ -167,20 +174,29 @@ if args.stitch:
     cipops = mathutils.Stitcher.run(cipops.transpose((2,0,1)), ci_stitches).transpose((1,2,0))
 
 cipops_ave = weightscale_sq(cipops, gwp_sf, nsteps)
+# print(gwp_sf, gwp_sf.shape)
+# print(cipops, cipops.shape)
+zci = weightscale(cipops, gwp_sf, nsteps, do_abs=False)
+# print(zci, zci.shape)
 with open(os.path.join(OUTDIR, 'ci'), 'wb') as f:
     np.save(f, cipops.T)
 with open(os.path.join(OUTDIR, 'cies'), 'wb') as f:
     np.save(f, ci_energies.T)
 with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
     np.save(f, cipops_ave)
+with open(os.path.join(OUTDIR, 'zci'), 'wb') as f:
+    np.save(f, zci)    
 manifest['quantities'].append('ci')
 
 diabats = data_gwpx['diabats'].transpose(2,1,0)
 diabats_ave = weightscale_sq(diabats, gwp_sf, nsteps)
+zcsf = weightscale(diabats, gwp_sf, nsteps, do_abs=False)
 with open(os.path.join(OUTDIR, 'csf'), 'wb') as f:
     np.save(f, diabats.T)
 with open(os.path.join(OUTDIR, 'csf_ave'), 'wb') as f:
     np.save(f, diabats_ave)
+with open(os.path.join(OUTDIR, 'zcsf'), 'wb') as f:
+    np.save(f, zcsf)
 manifest['quantities'].append('csf')
 
 msum = data_gwpx['mullikensum'].transpose(2,1,0)
