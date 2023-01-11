@@ -1,4 +1,5 @@
 from glogpy.l118_traj_job import l118_job
+from glogpy.freqency_job import frequency_job
 from mathutils import Stitcher
 import argparse
 import sys, os
@@ -22,7 +23,11 @@ parser.add_argument('-s','--stitch', dest='stitch', action='store_true',
                     help='Stitch the CI pops & energies to maintain state charecter throughout')
 
 parser.add_argument('-t','--truncate', dest='allow_truncate', action='store_true',
-                    help='Allow for mismatched route links (Allows parsing of partial logs)')          
+                    help='Allow for mismatched route links (Allows parsing of partial logs)')      
+
+parser.add_argument('-f','--freq', dest='freq',
+                    help='Specify a frequency file for normal mode analysis')
+
 args = parser.parse_args()
 # print(args)
 
@@ -36,6 +41,17 @@ if args.glob:
     sys.exit(-1)
 
 else:
+
+    if args.freq != None:
+        print("Reading FREQ file...")
+        with open(args.freq, 'r') as f:
+            data = f.read()
+        data = data.split('Initial command:\n')[-1] # Assume the freq job is the last
+        freq = frequency_job(data)
+        freq_data = freq.parse()
+        # print(freq_data)
+        print(f'FREQ file read OK')
+
     LOGFILE = args.log
     assert(os.path.exists(LOGFILE))
     gj = l118_job(LOGFILE, allow_partial=args.allow_truncate)
@@ -117,6 +133,18 @@ else:
     manifest['quantities'].append('nucde')
 
     # print(xns[0])
+
+    if args.freq != None:
+        nm2xyz, xyz2nm = mathutils.NormModeUtils.nm_matrix(freq_data['atommasses'], freq_data['vibfreqs'], freq_data['vibdisps'])
+        geom_init = mathutils.MathUtils.dict_to_list(freq_data['geom'])
+        geom_init = np.array([x[1] for x in geom_init])
+        # print(xyz, xyz.shape)
+        nmdata = mathutils.NormModeUtils.xyz_to_nm(xyz2nm, geom_init, np.array([xyz]))
+        # print(nmdata, nmdata.shape)
+        with open(os.path.join(OUTDIR, 'nm_ave'), 'wb') as f:
+            np.save(f, nmdata[0].T)
+        manifest['quantities'].append('nm')
+
 
     if 'mulliken_sum' in xns[0][2]:
         manifest['mqmap'] = list(xns[0][2]['mulliken_sum'].keys())
