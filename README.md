@@ -22,7 +22,7 @@ export PYTHONPATH=$PYTHONPATH:/path/to/dir
 ```
 
 ### Running extractor
-Extraction yields a maniest and set of numpy binaries with extracted data
+Extraction yields a manifest and drop of numpy binaries with extracted data. This can then be further analused or plotted
 
 For a quantics job use
 
@@ -43,6 +43,7 @@ These scripts are found in analysis folder
 - plotter - All in one plotter. Plot up a range a properties
 - gwp_dbg - per-GWP analysis tool to identify problem GWPs & inspect
 - to_xyz - Generate a trajectory xyz file for VMD
+- nm2 - Examine trajectory in NM space
 
 ## TODO
 Still missing a few things from old scripts - these are all on the todo list:
@@ -51,3 +52,4 @@ Still missing a few things from old scripts - these are all on the todo list:
 - [QEXTRACT] Like to move quantics extractor to use new IO jobs
 - [PLOTTER] Plot up dipoles. Hopefully coord system is OK
 - [PLOTTER] Plot up Hole Survival Probability
+- [PLOTTER] General refactor of analysis to be more general and flexible (FFT of other properties like NM)
