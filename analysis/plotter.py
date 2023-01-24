@@ -421,7 +421,7 @@ for n, c in enumerate(commands):
 
     # FFT
     elif cmd == 'fft':
-        # [FFT=cd|mq|csf(+ Do Phase Correction | - Do cos correction | 2 Power spectra):Cutoff:1,2,3|A:limxmin,limxmax]
+        # [FFT=sd|sdla|mq|csf(+ Do Phase Correction | - Do cos correction | 2 Power spectra):Cutoff:1,2,3|A:limxmin,limxmax]
         mode, CHOP, selector, lims = ins.split(':')
         CHOP=int(CHOP)
         if lims == 'None' : lims = None
@@ -453,6 +453,7 @@ for n, c in enumerate(commands):
         if mode == 'csf':  data = np.load(os.path.join(basepath, 'csf_ave'))
         elif mode == 'mq': data = np.load(os.path.join(basepath, 'mq_ave'))
         elif mode == 'sd': data = np.load(os.path.join(basepath, 'sd_ave'))
+        elif mode == 'sdla': data = np.load(os.path.join(basepath, 'sdla_ave'))
         else: raise Exception('Illegal FFT mode')
 
         # print(data.shape, len(times))
@@ -475,8 +476,9 @@ for n, c in enumerate(commands):
                 label = f'CSF {i+1}'
                 colour = get_nth_col(i)
             
-            elif mode == 'sd' or mode == 'mq': # SD/MQ are picked based on atom number
+            elif mode in ['sd', 'sdla', 'mq']: # SD/MQ are picked based on atom number
                 if mode == 'sd' : atom_number = manifest['spindenmap'][i]
+                elif mode == 'sdla' : atom_number = manifest['spindenmapLA'][i]
                 else : atom_number = manifest['mullikenmap'][i]
                 
                 if selector == None : pass

@@ -64,6 +64,8 @@ class ParseLogAll():
                     if do_spindens:
                         results['spindensum'] = np.zeros([ngwps, step_lim,  len(data['spinden_sum'])])
                         results['spindenmap'] = [int(i) for i in list(data['spinden_sum'].keys())]
+                        results['spindenLA'] = np.zeros([ngwps, step_lim,  len(data['spinden'])])
+                        results['spindenmapLA'] = [int(i) for i in list(data['spinden'].keys())]
 
                     first = False
 
@@ -101,6 +103,7 @@ class ParseLogAll():
                 if do_spindens:
                     for atomidx, sdsum in data['spinden_sum'].items():
                         results['spindensum'][i,j,results['spindenmap'].index(atomidx)] = sdsum
+                        results['spindenLA'][i,j,results['spindenmapLA'].index(atomidx)] = sdsum
 
                 nsteps += 1
         return results
