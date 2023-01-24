@@ -103,7 +103,8 @@ class ParseLogAll():
                 if do_spindens:
                     for atomidx, sdsum in data['spinden_sum'].items():
                         results['spindensum'][i,j,results['spindenmap'].index(atomidx)] = sdsum
-                        results['spindenLA'][i,j,results['spindenmapLA'].index(atomidx)] = sdsum
+                    for atomidx, sd in data['spinden'].items():
+                        results['spindenLA'][i,j,results['spindenmapLA'].index(atomidx)] = sd
 
                 nsteps += 1
         return results
