@@ -327,6 +327,22 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
+    elif cmd == 'sdla':
+        sd = np.load(os.path.join(basepath, 'sdla_ave'))
+        SDS = None if ins=='A' else [int(i) for i in ins.split(',')]
+        for i in range(len(manifest['spindenmapLA'])):
+            atom_number = manifest['spindenmapLA'][i]
+            if SDS == None : pass
+            elif atom_number not in SDS: continue
+            
+            try: symbol = ATOMICLABELS[manifest['atomnos'][str(atom_number)]-1]
+            except: symbol = '?'
+            axes[n].plot(times, sd[i], label='{} [{}]'.format(symbol, atom_number), color=get_nth_col(atom_number))
+        axes[n].set_title('Spin density')
+        axes[n].set_ylabel('Spin density')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right')
+
     elif cmd == 'avsd':
         csfs, av_window = ins.split(':')
         av_window = int(av_window)
