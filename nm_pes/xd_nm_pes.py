@@ -1,5 +1,5 @@
 from glogpy.freqency_job import frequency_job
-import sys
+import sys, json
 import itertools
 import numpy as np
 import copy
@@ -72,8 +72,8 @@ for x in itertools.product(*nmspaces):
     else:
         text = copy.deepcopy(template)
         text = text.replace('#XYZ#', g)
-        dispstring = {f'NM{i[0]}':i[1] for i in zip(nmidx, x)}
-        text = text.replace('#DISP#', str(dispstring))
+        dispstring = {f'NM{i[0]+1}':i[1] for i in zip(nmidx, x)}
+        text = text.replace('#DISP#', json.dumps(dispstring))
         out = os.path.join(outpath, f'{n}.com')
         print(out)
         with open(out, 'w') as f:
