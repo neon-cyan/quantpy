@@ -36,6 +36,19 @@ For a L118 job use
 python3 extractl118new.py /path/to/l118.log
 ```
 
+If too much data has been extracted cut.py script lets you cut to number of steps of specific timestep
+
+### Dynamics prep
+A PES surface sweep and extraction code is found in nm_pes
+
+xd_nm_pes uses a frequency.log file and an arbitrary number of NM dimentions to sweep. The output is either printed to terminal or, if template is supplies, to a fodler in same place as template
+
+A small extractor for this data with state following has been written : xd_nm_stitch_extract. It simply prints a TSV to terminal of all points
+
+Since muli-dimentional plotting in matplotlib is poor, I reccomend using something else to do the actual plotting
+
+
+
 ### Analysis tools
 These scripts are found in analysis folder
 
