@@ -25,7 +25,7 @@ class ParseLogAll():
                 try:
                     log = dj(s.strip())
                     data = log.parse(do_CI_States=True)
-                except: raise Exception(f'An error occured parsing step {nsteps} in GWP {i}!')
+                except: raise Exception(f'An error occured parsing step {nsteps+1} in GWP {i+1}!')
 
                 if first:
                     # First step : figure out avaialble quantities & construct arrays
