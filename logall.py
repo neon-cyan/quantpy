@@ -25,7 +25,7 @@ class ParseLogAll():
                 try:
                     log = dj(s.strip())
                     data = log.parse(do_CI_States=True)
-                except: raise Exception(f'An error occured parsing step {nsteps} in GWP {i}!')
+                except: raise Exception(f'An error occured parsing step {nsteps+1} in GWP {i+1}!')
 
                 if first:
                     # First step : figure out avaialble quantities & construct arrays
@@ -64,6 +64,8 @@ class ParseLogAll():
                     if do_spindens:
                         results['spindensum'] = np.zeros([ngwps, step_lim,  len(data['spinden_sum'])])
                         results['spindenmap'] = [int(i) for i in list(data['spinden_sum'].keys())]
+                        results['spindenLA'] = np.zeros([ngwps, step_lim,  len(data['spinden'])])
+                        results['spindenmapLA'] = [int(i) for i in list(data['spinden'].keys())]
 
                     first = False
 
@@ -101,6 +103,8 @@ class ParseLogAll():
                 if do_spindens:
                     for atomidx, sdsum in data['spinden_sum'].items():
                         results['spindensum'][i,j,results['spindenmap'].index(atomidx)] = sdsum
+                    for atomidx, sd in data['spinden'].items():
+                        results['spindenLA'][i,j,results['spindenmapLA'].index(atomidx)] = sd
 
                 nsteps += 1
         return results

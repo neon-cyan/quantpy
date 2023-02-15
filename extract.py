@@ -218,6 +218,16 @@ if 'spindensum' in data_gwpx:
     manifest['quantities'].append('sd')
     manifest['spindenmap'] = data_gwpx['spindenmap']
 
+if 'spindenLA' in data_gwpx:
+    sdLA = data_gwpx['spindenLA'].transpose(2,1,0)
+    sdLA_ave = weightscale(sdLA, gwp_sf, nsteps)
+    with open(os.path.join(OUTDIR, 'sdla'), 'wb') as f:
+        np.save(f, sdLA)
+    with open(os.path.join(OUTDIR, 'sdla_ave'), 'wb') as f:
+        np.save(f, sdLA_ave)
+    manifest['quantities'].append('sdLA')
+    manifest['spindenmapLA'] = data_gwpx['spindenmapLA']
+
 # Normal mode & ave geom have seperate pre-logic (see above)
 # Save the matrices xyz->nm and nm->xyz
 with open(os.path.join(OUTDIR, 'nm2xyz'), 'wb') as f:

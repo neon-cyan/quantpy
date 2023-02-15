@@ -32,7 +32,7 @@ if len(sys.argv) < 5:
     => CSFs=[A|1,2,3]                               - Comma seperated list of at least one CSF/SD number or A for all
     => CSFv=[label:1,1,0,0_label:0,0,1,1]           - At least one label and real vector of length CSF
     => AVCSFs=[A|1,2,3:av_window]                   - Comma seperated list of at least one CSF/SD number or A for all and average window size
-    => AVCSFv=[av_window_label:1,0,0_label:0,0,1]   - Average window size, at least one label and real vector of length CSF [Weighted the pre-averaged]
+    => CSFvReIm=[label:1,1,0,0]                     - Real + Imaginary parts for a label and CSF vector
 
     ** SPIN DENSITY AND MULLIKEN CHARGE (+ HEAT MAPS) **
     => SD=[A|1,2]                                   - At least one atom number or A for all
@@ -88,10 +88,11 @@ fig, axes = plt.subplots(1, len(commands), num=manifest_path, figsize=(wpp * len
 if len(commands) == 1 : axes = [axes] # MPL messes with array if only one plot => Need to re-array
 
 for n, c in enumerate(commands):
-    avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
     cmd, ins = c.split('=')
+    cmd=cmd.lower()
     # GEOMETRICS
-    if cmd == 'BL':
+    if cmd == 'bl':
+        avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
         BPS = []
         for x in ins.split(','):
             a, b = [int(z) for z in x.split('-')]
@@ -112,7 +113,7 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
-    elif cmd == 'PBL':
+    elif cmd == 'pbl':
         avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
         BPS = []
         for x in ins.split(','):
@@ -137,7 +138,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
 
 
-    elif cmd == 'NM':
+    elif cmd == 'nm':
         nms = np.load(os.path.join(basepath, 'nm_ave'))
         for x in [int(i) for i in ins.split(',')]:
             axes[n].plot(times, nms[x-1], label=f'NM{x}', color=get_nth_col(x-1))
@@ -146,7 +147,7 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
-    elif cmd == 'BA':
+    elif cmd == 'ba':
         avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
         BPS = []
         for x in ins.split(','):
@@ -171,7 +172,8 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
-    elif cmd == 'PBA':
+    elif cmd == 'pba':
+        avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
         BPS = []
         for x in ins.split(','):
             a, b, c = [int(z) for z in x.split('-')]
@@ -197,7 +199,7 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
-    elif cmd == 'DA':
+    elif cmd == 'da':
         avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
         BPS = []
         for x in ins.split(','):
@@ -226,7 +228,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
         
     # ELECTRONICS
-    elif cmd == 'CIs':
+    elif cmd == 'ci' or cmd == 'cis':
         adiabats = np.load(os.path.join(basepath, 'ci_ave'))
         CI_STATES = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(adiabats.shape[0]):
@@ -239,7 +241,7 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
-    elif cmd == 'CSFs':
+    elif cmd == 'csf' or cmd == 'csfs':
         diabats = np.load(os.path.join(basepath, 'csf_ave'))
         CSF_STATES = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(diabats.shape[0]):
@@ -252,7 +254,7 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
-    elif cmd == 'CSFv':
+    elif cmd == 'csfv':
         diabats = np.load(os.path.join(basepath, 'zcsf'))
         # print(diabats.shape)
         # Expect a list of label:1,1,0,0_label:0,0,1,1
@@ -273,7 +275,27 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
-    elif cmd == 'AVCSFs':
+    elif cmd == 'csfvreim':
+        diabats = np.load(os.path.join(basepath, 'zcsf'))
+        # print(diabats.shape)
+        # Expect inp of form label:1,1,0,0
+        label, nums = ins.split(':')
+        nums = [float(j) for j in nums.split(',')]
+        # assert(len(nums)==diabats.shape[1])
+        vect = np.array(nums)
+        to_plot[label] = vect / np.linalg.norm(vect)
+            # Normalize the vector
+        reals = np.real(diabats.T.dot(v))
+        imgs = np.imag(diabats.T.dot(v))
+        axes[n].plot(times, reals, label='Re')
+        axes[n].plot(times, imgs, label='Im')
+
+        axes[n].set_title(f'{label} state vector component evolution')
+        axes[n].set_ylabel('Coefficent')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right')
+
+    elif cmd == 'avcsf':
         diabats = np.load(os.path.join(basepath, 'csf_ave'))
         csfs, av_window = ins.split(':')
         av_window = int(av_window)
@@ -289,30 +311,7 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
-    elif cmd == 'AVCSFv':
-        diabats = np.load(os.path.join(basepath, 'csf_ave'))
-        # Expect format av_window_label:1,0,0_label:0,0,1
-        av_window, *toplt = ins.split('_')
-        av_window = int(av_window)
-
-        to_plot={}
-        for i in toplt:
-            print(i)
-            label, nums = i.split(':')
-            nums = [float(j) for j in nums.split(',')]
-            assert(len(nums)==diabats.shape[0])
-            to_plot[label] = np.array(nums)
-        mavs = np.array([mathutils.MathUtils.moving_avg(i, av_window) for i in diabats])
-        # print(mavs.shape)
-        for k, v in to_plot.items():
-            data = np.dot(v, mavs)
-            axes[n].plot(times[:len(data)], data, label=k)
-        axes[n].set_title(f'{av_window} point moving average diabatic [CSF] state custom vector evolution')
-        axes[n].set_ylabel('Averaged state population')
-        axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
-
-    elif cmd == 'SD':
+    elif cmd == 'sd':
         sd = np.load(os.path.join(basepath, 'sd_ave'))
         SDS = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(len(manifest['spindenmap'])):
@@ -328,7 +327,23 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
-    elif cmd == 'AVSD':
+    elif cmd == 'sdla':
+        sd = np.load(os.path.join(basepath, 'sdla_ave'))
+        SDS = None if ins=='A' else [int(i) for i in ins.split(',')]
+        for i in range(len(manifest['spindenmapLA'])):
+            atom_number = manifest['spindenmapLA'][i]
+            if SDS == None : pass
+            elif atom_number not in SDS: continue
+            
+            try: symbol = ATOMICLABELS[manifest['atomnos'][str(atom_number)]-1]
+            except: symbol = '?'
+            axes[n].plot(times, sd[i], label='{} [{}]'.format(symbol, atom_number), color=get_nth_col(atom_number))
+        axes[n].set_title('Spin density')
+        axes[n].set_ylabel('Spin density')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right')
+
+    elif cmd == 'avsd':
         csfs, av_window = ins.split(':')
         av_window = int(av_window)
         SDS = None if csfs=='A' else [int(i) for i in csfs.split(',')]
@@ -346,7 +361,7 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
-    elif cmd == 'MQ':
+    elif cmd == 'mq':
         mq = np.load(os.path.join(basepath, 'mq_ave'))
         MQS = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(len(manifest['mullikenmap'])):
@@ -363,7 +378,7 @@ for n, c in enumerate(commands):
         axes[n].legend(loc='upper right')
         
     # Heatmaps - currently SD/MQ (may want to add BL)
-    elif cmd == 'HM':
+    elif cmd == 'hm':
         def sbin_vals(nb, vals, val_scale, max_val, min_val):
             x = np.zeros(nb)
             step = (max_val-min_val)/nb
@@ -421,8 +436,8 @@ for n, c in enumerate(commands):
         axes[n].plot(times, ave_data, color='white', linestyle='dotted',linewidth=2)
 
     # FFT
-    elif cmd == 'FFT':
-        # [FFT=cd|mq|csf(+ Do Phase Correction | - Do cos correction | 2 Power spectra):Cutoff:1,2,3|A:limxmin,limxmax]
+    elif cmd == 'fft':
+        # [FFT=sd|sdla|mq|csf(+ Do Phase Correction | - Do cos correction | 2 Power spectra):Cutoff:1,2,3|A:limxmin,limxmax]
         mode, CHOP, selector, lims = ins.split(':')
         CHOP=int(CHOP)
         if lims == 'None' : lims = None
@@ -454,6 +469,7 @@ for n, c in enumerate(commands):
         if mode == 'csf':  data = np.load(os.path.join(basepath, 'csf_ave'))
         elif mode == 'mq': data = np.load(os.path.join(basepath, 'mq_ave'))
         elif mode == 'sd': data = np.load(os.path.join(basepath, 'sd_ave'))
+        elif mode == 'sdla': data = np.load(os.path.join(basepath, 'sdla_ave'))
         else: raise Exception('Illegal FFT mode')
 
         # print(data.shape, len(times))
@@ -476,8 +492,9 @@ for n, c in enumerate(commands):
                 label = f'CSF {i+1}'
                 colour = get_nth_col(i)
             
-            elif mode == 'sd' or mode == 'mq': # SD/MQ are picked based on atom number
+            elif mode in ['sd', 'sdla', 'mq']: # SD/MQ are picked based on atom number
                 if mode == 'sd' : atom_number = manifest['spindenmap'][i]
+                elif mode == 'sdla' : atom_number = manifest['spindenmapLA'][i]
                 else : atom_number = manifest['mullikenmap'][i]
                 
                 if selector == None : pass
