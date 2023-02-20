@@ -21,7 +21,7 @@ class casjob(gaussian_job):
 
 elems = []
 
-if len(sys.argv <2): 
+if len(sys.argv) <2: 
     print(f"Use {sys.argv[0]} /glob/exp/to/logs/*.log")
     sys.exit(-1)
 
