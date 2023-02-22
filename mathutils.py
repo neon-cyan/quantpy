@@ -147,7 +147,7 @@ class NormModeUtils:
             for dim in range(3):
                 for i in range(nbmode):
                     idof = j*3+dim
-                    div = (AtoB*np.sqrt(AtomMass[j+1]*freq[i]*CMtoEV*AMUtoAU*EVtoAU))
+                    div = (AtoB*np.sqrt(AtomMass[j+1]*np.abs(freq[i])*CMtoEV*AMUtoAU*EVtoAU))
                     nm2xyz[idof, i] = smatrix.T[idof, i] / div
                     smatrix[i, idof] = smatrix[i, idof] * div
 
