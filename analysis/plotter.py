@@ -30,7 +30,9 @@ if len(sys.argv) < 5:
 
     ** CSF/SD POPULATION **
     => CSFs=[A|1,2,3]                               - Comma seperated list of at least one CSF/SD number or A for all
-    => CSFv=[label:1,1,0,0_label:0,0,1,1]           - At least one label and real vector of length CSF
+    => CSFv=[label:1,1,0,0_label:0,0,1,1]           - At least one label and real vector of length CSF (Auto-rescaled)
+    => UCSFv=[label:1,1,0,0_label:0,0,1,1]          - At least one label and real vector of length CSF (Non-rescaled)
+    => SUMSCFV=[label:1,0,0+0,1,0_label:0,0,1]      - At least one label and real vectors of length CSF (Auto-rescaled)
     => AVCSFs=[A|1,2,3:av_window]                   - Comma seperated list of at least one CSF/SD number or A for all and average window size
     => CSFvReIm=[label:1,1,0,0]                     - Real + Imaginary parts for a label and CSF vector
 
@@ -254,7 +256,7 @@ for n, c in enumerate(commands):
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
 
-    elif cmd == 'csfv':
+    elif cmd == 'csfv' or cmd=='ucsfv':
         diabats = np.load(os.path.join(basepath, 'zcsf'))
         # print(diabats.shape)
         # Expect a list of label:1,1,0,0_label:0,0,1,1
@@ -264,13 +266,43 @@ for n, c in enumerate(commands):
             nums = [float(j) for j in nums.split(',')]
             # assert(len(nums)==diabats.shape[1])
             vect = np.array(nums)
-            to_plot[label] = vect / np.linalg.norm(vect)
+            if cmd=='csfv': # Rescale if needed
+                vect = vect / np.linalg.norm(vect)
+            else:
+                print(f'About to plot an unscaled vector! Norm={np.linalg.norm(vect)}')
+            to_plot[label] = vect
             # Normalize the vector
         for k, v in to_plot.items():
-            data = np.abs(diabats.T.dot(v))
+            data = np.abs(diabats.T.dot(v))**2
             axes[n].plot(times, data, label=k)
 
         axes[n].set_title('Diabatic [CSF] state vector evolution')
+        axes[n].set_ylabel('State population')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right')
+
+    elif cmd == 'sumcsfv':
+        # expect input of form label:0,0,1+1,0,0_label:1,1,1
+        diabats = np.load(os.path.join(basepath, 'zcsf'))
+        # print(diabats.shape)
+        # Expect a list of label:1,1,0,0_label:0,0,1,1
+        to_plot={}
+        for i in ins.split('_'):
+            label, nums = i.split(':')
+            sumcomps = nums.split('+')
+            to_plot[label] = []
+            for s in sumcomps:
+                vect = np.array([float(j) for j in s.split(',')])
+                vect = vect / np.linalg.norm(vect)
+                # print(label, vect)
+                to_plot[label].append(vect)
+        for k, v in to_plot.items():
+            sarr = np.array([np.abs(diabats.T.dot(j))**2 for j in v])
+            # print(sarr.T.shape)
+            # print(sorted(sarr.T[0]))
+            data = np.sum(sarr, 0)
+            axes[n].plot(times, data, label=k)
+        axes[n].set_title('Diabatic [CSF] state vector sum evolution')
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')

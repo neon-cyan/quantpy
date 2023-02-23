@@ -102,7 +102,7 @@ else:
     manifest['quantities'].append('cicomp')
 
     with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
-        np.save(f, np.abs(adiabats[0]))
+        np.save(f, np.abs(adiabats[0])**2)
     with open(os.path.join(OUTDIR, 'zci'), 'wb') as f:
         np.save(f, adiabats[0])
     manifest['quantities'].append('ci')
@@ -110,7 +110,7 @@ else:
     # save CSF pop
     diabats = np.abs(np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])).T
     with open(os.path.join(OUTDIR, 'csf_ave'), 'wb') as f:
-        np.save(f, diabats)
+        np.save(f, diabats**2)
     with open(os.path.join(OUTDIR, 'zcsf'), 'wb') as f:
         np.save(f, np.array([np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])])[0].T)
     manifest['quantities'].append('csf')

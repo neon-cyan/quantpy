@@ -312,16 +312,18 @@ class linkparsers():
             result['dipole'] = dm
         return result
 
-    def L405(txt):
-        import re
+    def L405(txt, configs=False):
         d= {'slater' : False}
         d['n_basis'] = 0
+        if configs: d['config_list'] = []
         for ln in txt:
             # print(ln)
             if 'SLATER DETERMINANT BASIS' in ln:
                 d['slater'] = True
             if 'Configuration' in ln:
+                if configs: d['config_list'].append(ln.strip())
                 d['n_basis'] = max(int(ln.split()[1]), d['n_basis']) # More robust -> deal with GVB
+        # print(d)
         return d
 
     def L510_TD(txt, do_CI_States=False):
