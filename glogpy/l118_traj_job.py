@@ -22,8 +22,10 @@ class l118_job(gaussian_jobio):
         # print(linkinloop)
         assert(510 in linkinloop)
         assert(405 in linkinloop)
-        do_ana = True if 601 in linkinloop else False # Do not do analysis if not in L118 loop
-        if print_info: print('Found suitable L118 loop : L510 OK L405 OK L601 {}'.format('OK' if do_ana else 'ABSENT'))
+        do_spin_ana = True if 601 in linkinloop else False # Do not do spin if not in L118 loop
+        do_force_ana = True if 716 in linkinloop else False # Do not do force if not in L118 loop
+        if print_info: print('Found suitable L118 loop : L510 OK L405 OK L601 {} L716 {}'.
+            format('OK' if do_spin_ana else 'ABSENT', 'OK' if do_force_ana else 'ABSENT'))
 
         # Next, check Number of L510s & 405s
         l405s = list(filter(lambda x: x.number==405, self.link_list))
@@ -61,13 +63,15 @@ class l118_job(gaussian_jobio):
         # When double L118 it will double print in the beginning but have an extra point at the end
 
         # Generate the 610s list if needed
-        if do_ana: l601s = list(filter(lambda x: x.number==601, self.link_list))
+        if do_spin_ana: l601s = list(filter(lambda x: x.number==601, self.link_list))
+        if do_force_ana: l716s = list(filter(lambda x: x.number==716, self.link_list))
 
         if allow_truncate:
             # Use for incomplete jobs
             if print_info: print('Checking truncation ...')
             totnew = min(tot, len(l510s))
-            if do_ana: totnew = min(totnew, len(l601s))
+            if do_spin_ana: totnew = min(totnew, len(l601s))
+            if do_force_ana: totnew = min(totnew, len(l716s))
             if tot != totnew:
                 if print_info:
                     print('About to truncate from {tot} -> {totnew} steps')
@@ -92,13 +96,9 @@ class l118_job(gaussian_jobio):
             info510 = l510s[n].text_parse(self.txtfile, linkparsers.L510_TD, do_CI_States=True)
             # print(info510)
 
-            if do_ana: 
-                info601 = l601s[n].text_parse(self.txtfile, linkparsers.L601, spin_dens=spin_dens)
-            else:
-                info601 = {}
-            # print(info601)
-
-            xn.append([info510, info118, info601])
+            info601 = l601s[n].text_parse(self.txtfile, linkparsers.L601, spin_dens=spin_dens) if do_spin_ana else {}
+            info716 = l716s[n].text_parse(self.txtfile, linkparsers.L716_hpmodes, NAtoms=len(l202_init['proton_nums']), hpmode=False) if do_force_ana else {}
+            xn.append([info510, info118, info601, info716])
             n += 1
         if print_info: print('Parser finished OK')
         return (l202_init, xn, l405)

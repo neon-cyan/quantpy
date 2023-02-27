@@ -102,7 +102,7 @@ else:
     manifest['quantities'].append('cicomp')
 
     with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
-        np.save(f, np.abs(adiabats[0])**2)
+        np.save(f, np.square(np.abs(adiabats[0])))
     with open(os.path.join(OUTDIR, 'zci'), 'wb') as f:
         np.save(f, adiabats[0])
     manifest['quantities'].append('ci')
@@ -110,7 +110,7 @@ else:
     # save CSF pop
     diabats = np.abs(np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])).T
     with open(os.path.join(OUTDIR, 'csf_ave'), 'wb') as f:
-        np.save(f, diabats**2)
+        np.save(f, np.square(diabats))
     with open(os.path.join(OUTDIR, 'zcsf'), 'wb') as f:
         np.save(f, np.array([np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])])[0].T)
     manifest['quantities'].append('csf')
@@ -132,7 +132,10 @@ else:
         np.save(f, nucpe)    
     manifest['quantities'].append('nucde')
 
-    # print(xns[0])
+    if 'maxforce' in xns[0][3]:
+        with open(os.path.join(OUTDIR, 'maxf'), 'wb') as f:
+            np.save(f, [[i[3]['maxforce'] for i in xns]])
+        manifest['quantities'].append('maxf')
 
     if args.freq != None:
         nm2xyz, xyz2nm = mathutils.NormModeUtils.nm_matrix(freq_data['atommasses'], freq_data['vibfreqs'], freq_data['vibdisps'])
@@ -144,7 +147,6 @@ else:
         with open(os.path.join(OUTDIR, 'nm_ave'), 'wb') as f:
             np.save(f, nmdata[0].T)
         manifest['quantities'].append('nm')
-
 
     if 'mulliken_sum' in xns[0][2]:
         manifest['mqmap'] = list(xns[0][2]['mulliken_sum'].keys())
