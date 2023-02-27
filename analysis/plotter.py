@@ -324,7 +324,7 @@ for n, c in enumerate(commands):
             for s in sumcomps:
                 vect = np.array([float(j) for j in s.split(',')])
                 vect = vect / np.linalg.norm(vect)
-                print(label, vect)
+                # print(label, vect)
                 to_plot[label].append(vect)
         for k, v in to_plot.items():
             sarr = np.array([np.square(np.abs(diabats.T.dot(j))) for j in v])
