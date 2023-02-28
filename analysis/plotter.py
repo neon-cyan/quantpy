@@ -91,7 +91,7 @@ for n, c in enumerate(commands):
 
     # GENERAL GWP STUFF
     if cmd in ['maxf', 'mf']:
-        assert(len(cmdptx) > 1)
+        assert(len(cmdptx) >= 1)
         forces = np.load(os.path.join(basepath, 'maxf'))
         # print(forces.shape)
         for gwp in cmdptx:
