@@ -332,7 +332,7 @@ for n, c in enumerate(commands):
             # print(sorted(sarr.T[0]))
             data = np.sum(sarr, 0)
             axes[n].plot(times, data, label=k)
-        axes[n].set_title('CSF/SD state vector ' + ('sum' if cmd=='sumcsfv'else '')+'evolution'+title)
+        axes[n].set_title('CSF/SD state vector ' + ('sum ' if cmd=='sumcsfv'else '')+'evolution'+title)
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
