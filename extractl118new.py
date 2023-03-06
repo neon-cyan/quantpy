@@ -1,6 +1,6 @@
 from glogpy.l118_traj_job import l118_job
 from glogpy.freqency_job import frequency_job
-from mathutils import Stitcher
+from mathutils import Stitcher, MathUtils
 import argparse
 import sys, os
 import mathutils
@@ -137,6 +137,13 @@ else:
             np.save(f, [[i[3]['maxforce'] for i in xns]])
         manifest['quantities'].append('maxf')
 
+    if 'forces' in xns[0][3]:
+        forcearr = np.array([[MathUtils.dict_to_list(i[3]['forces']) for i in xns]])
+        # print(forcearr.shape)
+        with open(os.path.join(OUTDIR, 'forces'), 'wb') as f:
+            np.save(f, forcearr)
+        manifest['quantities'].append('forces')
+
     if args.freq != None:
         nm2xyz, xyz2nm = mathutils.NormModeUtils.nm_matrix(freq_data['atommasses'], freq_data['vibfreqs'], freq_data['vibdisps'])
         geom_init = mathutils.MathUtils.dict_to_list(freq_data['geom'])
@@ -147,6 +154,11 @@ else:
         with open(os.path.join(OUTDIR, 'nm_ave'), 'wb') as f:
             np.save(f, nmdata[0].T)
         manifest['quantities'].append('nm')
+        with open(os.path.join(OUTDIR, 'nm2xyz'), 'wb') as f:
+            np.save(f, nm2xyz)
+        with open(os.path.join(OUTDIR, 'xyz2nm'), 'wb') as f:
+            np.save(f, xyz2nm)
+
 
     if 'mulliken_sum' in xns[0][2]:
         manifest['mqmap'] = list(xns[0][2]['mulliken_sum'].keys())
