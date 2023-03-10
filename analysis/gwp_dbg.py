@@ -65,34 +65,7 @@ def find_problem_gwps(basepath, manifest):
 
 # Plots all GWPs properties
 # Force + CASCON plotting is depracated
-# NM, BL, CI + CSF(V) is deprecated - use plotter with GWP <- notation
-
-def plotpes(basepath, manifest):
-    assert('ci' in manifest['quantities'])
-    print('Which GWP to plot?')
-    raw_data = np.load(os.path.join(basepath, 'cies'))
-    # print(raw_data.shape)
-    gwp = input()
-    if gwp == '*': gwp = list(range(0, raw_data.shape[0]))
-    else: gwp = [int(gwp)-1]
-
-    print('Which CIs to plot? Give a comma seperated list')
-    nms = input()
-    nms = [int(i)-1 for i in nms.split(',')]
-    for g in gwp:
-        rd = raw_data[g].T
-        times = np.load(os.path.join(basepath, 'times'))
-        fig, ax = plt.subplots()
-        for i in nms:
-            ax.plot(times, rd[i], label=f'CI{i+1}', color=get_nth_col(i))
-        ax.set_title(f'TD-PES (for GWP{g+1})')
-        ax.set_ylabel('Energy / Ha')
-        ax.set_xlabel('Time (fs)')
-        ax.legend(loc='upper right')
-        fig.tight_layout()
-        fig.savefig(os.path.join(basepath, f'dbg_pes_gwp{g+1}.png'))
-        if len(gwp) == 1 : plt.show()
-    print('Plot OK')
+# NM, BL, CI + CSF(V) is deprecated - use plotter with GWP @ notation
 
 def plotl118e(basepath, manifest):
     assert('nucde' in manifest['quantities'])
@@ -126,7 +99,6 @@ if len(sys.argv) < 3:
     print(f'Use {sys.argv[0]} path/to/manifest.json task')
     print('''Availble tasks:
     qs = QuickSearch (helps identify problem GWPs)
-    ppes = Plot TD-PES [GWP-wise]
     pl118e = Plot the L118 nucelar energies (EKin / EPot / ETot)
     ''')
     sys.exit(-1)
@@ -142,6 +114,5 @@ except:
 
 task = task.lower()
 if task=='qs' : find_problem_gwps(basepath, manifest)
-elif task=='ppes' : plotpes(basepath, manifest)
 elif task=='pl118e' : plotl118e(basepath, manifest)
 else: print('Invalid job!')

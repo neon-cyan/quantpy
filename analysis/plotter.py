@@ -55,12 +55,12 @@ if len(sys.argv) < 5:
     ===> Range is either None or given as min,max (auto * 1E15)
 
     Commands marked with <*> support some level of per-GWP functionality
-    This is invoked using the arrow operator <- e.g. BL<-1=1-2,2-3
-    NB: You many need to use a backtick prefix in your bash shell : \<-
-    A few special GWP-only commands are included for completeness
-    => maxf<-GWP=                                   - Max force (AU) - takes no ordinary parameters
-    => casde<-GWP=                                  - CASSCF convergence for GWPs - takes no ordinary parameters
-    => fnm<-GWP=[1,2,3]                             - Forces expressed in normal mode coordinates
+    This is invoked using the at operator @ e.g. BL@1=1-2,2-3
+    A few special GWP-only commands are included
+    => maxf@GWP=                                   - Max force (in AU) - takes no ordinary parameters
+    => casde@GWP=                                  - CASSCF convergence for GWPs - takes no ordinary parameters
+    => fnm@GWP=[1,2,3]                             - Forces expressed in normal mode coordinates
+    => tdpes@GWP=[1,2,3]                           - CI State energies (in AU) as a function of time
     """)
     sys.exit(0)
 
@@ -84,8 +84,8 @@ for n, c in enumerate(commands):
     cmd, ins = c.split('=')
 
     cmdptx = None
-    if '<-' in cmd:
-        cmd, cmdptx = cmd.split('<-') # Deal with GWPs ('extra context')
+    if '@' in cmd:
+        cmd, cmdptx = cmd.split('@') # Deal with GWPs ('extra context')
         cmdptx = [int(i)-1 for i in cmdptx.split(',')]
     cmd=cmd.lower()
 
@@ -120,6 +120,8 @@ for n, c in enumerate(commands):
         if cmdptx != None:
             if len(cmdptx) > 1: raise Exception("Only one GWP allowed for FNM plots!")
             else: raw_data = np.load(os.path.join(basepath, 'forces'))[cmdptx[0]]
+        else:
+            raise Excpetion("FNM Requires a GWP!")
         nms = [int(i)-1 for i in ins.split(',')]
         # print(nms)
         for a in nms:
@@ -127,12 +129,28 @@ for n, c in enumerate(commands):
             xyz_nma = xyz2nm[a]
             for b in range(raw_data.shape[0]):
                 dp.append(xyz_nma.dot(raw_data[b].reshape(xyz_nma.shape)))
-            axes[n].plot(times, dp, label=f'NM{a+1}')
+            axes[n].plot(times, dp, label=f'NM{a+1}', color=get_nth_col(a))
         axes[n].set_title(f'Gradient in normal modes (for GWP{cmdptx[0]+1})')
         axes[n].set_ylabel('Gradient as normal mode')
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='upper right')
-        
+
+    elif cmd=='tdpes':
+        assert('ci' in manifest['quantities'])
+        # Read in correct GWP's CIE
+        if cmdptx != None:
+            if len(cmdptx) > 1: raise Exception("Only one GWP allowed for plotpes plots!")
+            else: raw_data = np.load(os.path.join(basepath, 'cies'))[cmdptx[0]].T
+        else:
+            raise Excpetion("PlotPES Requires a GWP!")
+        cis = [int(i)-1 for i in ins.split(',')]
+        for i in cis:
+            axes[n].plot(times, raw_data[i], label=f'CI{i+1}', color=get_nth_col(i))
+        axes[n].set_title(f'TD-PES (for GWP{cmdptx[0]+1})')
+        axes[n].set_ylabel('Energy / Ha')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='upper right')
+
     # GEOMETRICS
     elif cmd in ['bl', 'pbl']:
         avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
