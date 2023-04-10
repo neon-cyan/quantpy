@@ -41,7 +41,7 @@ for m in manifest:
 
     plt.plot(x,y, label=label)
 
-if len(manifest) > 1: plt.legend(loc='upper right')
+if len(manifest) > 1: plt.legend(loc='best')
 plt.title(f'2D Normal mode - cutoff {trunc}' if trunc != 'None' else '2D Normal mode') # Title of the plot
 plt.xlabel(f'NM{nm1+1}')
 plt.ylabel(f'NM{nm2+1}')

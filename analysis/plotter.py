@@ -100,7 +100,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Max forces (per GWP)')
         axes[n].set_ylabel('Max force (au)')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd in ['casde', 'cascon']:
         assert('casde' in manifest['quantities'])
@@ -111,7 +111,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('CASSCF convergence (per GWP)')
         axes[n].set_ylabel('Convergence')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd=='fnm':
         assert('nm' in manifest['quantities'])
@@ -133,7 +133,7 @@ for n, c in enumerate(commands):
         axes[n].set_title(f'Gradient in normal modes (for GWP{cmdptx[0]+1})')
         axes[n].set_ylabel('Gradient as normal mode')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd=='tdpes':
         assert('ci' in manifest['quantities'])
@@ -149,7 +149,7 @@ for n, c in enumerate(commands):
         axes[n].set_title(f'TD-PES (for GWP{cmdptx[0]+1})')
         axes[n].set_ylabel('Energy / Ha')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     # GEOMETRICS
     elif cmd in ['bl', 'pbl']:
@@ -186,7 +186,7 @@ for n, c in enumerate(commands):
             axes[n].set_ylabel('Bond length (Å)')
         axes[n].set_title(title)
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'nm':
         nms = np.load(os.path.join(basepath, 'nm_ave'))
@@ -202,7 +202,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Normal mode evolution'+title)
         axes[n].set_ylabel('Normal mode excitation')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'ba':
         avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
@@ -227,7 +227,7 @@ for n, c in enumerate(commands):
         axes[n].set_ylabel('Bond angle (deg)')
         axes[n].set_title('Bond angle')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'pba':
         avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
@@ -254,7 +254,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Bond angles (fractional)')
         axes[n].set_ylabel('Fractional change')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'da':
         avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
@@ -282,7 +282,7 @@ for n, c in enumerate(commands):
         axes[n].set_ylabel('Dihedral angle (rad)')
         axes[n].set_title('Bond angle')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
         
     # ELECTRONICS
     elif cmd == 'ci' or cmd == 'cis':
@@ -303,7 +303,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Adiabatic [CI] state evolution'+title)
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd in ['csfs','csf','sdet','sdets']:
         diabats = np.load(os.path.join(basepath, 'csf_ave'))
@@ -322,7 +322,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Diabatic [CSF] state evolution'+title)
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='lower left')
 
     elif cmd in ['sumcsfv','csfv']:
         # expect input of form label:0,0,1+1,0,0_label:1,1,1
@@ -353,7 +353,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('CSF/SD state vector ' + ('sum ' if cmd=='sumcsfv'else '')+'evolution'+title)
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'csfvreim':
         diabats = np.load(os.path.join(basepath, 'zcsf'))
@@ -378,7 +378,7 @@ for n, c in enumerate(commands):
         axes[n].set_title(f'{label} state vector component evolution'+title)
         axes[n].set_ylabel('Coefficent')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'avcsf':
         diabats = np.load(os.path.join(basepath, 'csf_ave'))
@@ -400,7 +400,7 @@ for n, c in enumerate(commands):
         axes[n].set_title(f'{av_window} point moving average CSF state evolution'+title)
         axes[n].set_ylabel('Averaged state population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'sd':
         sd = np.load(os.path.join(basepath, 'sd_ave'))
@@ -416,7 +416,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Spin density evolution (H Summed)')
         axes[n].set_ylabel('Spin density')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'sdla':
         sd = np.load(os.path.join(basepath, 'sdla_ave'))
@@ -432,7 +432,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Spin density')
         axes[n].set_ylabel('Spin density')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'avsd':
         sd = np.load(os.path.join(basepath, 'sd_ave'))
@@ -451,7 +451,7 @@ for n, c in enumerate(commands):
         axes[n].set_title(f'{av_window}-point moving average spin density (H Summed)')
         axes[n].set_ylabel('Spin density')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'mq':
         mq = np.load(os.path.join(basepath, 'mq_ave'))
@@ -467,7 +467,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Mulliken charge evolution (H Summed)')
         axes[n].set_ylabel('Mulliken charge')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
         
     # Heatmaps - currently SD/MQ (may want to add BL)
     elif cmd == 'hm':
@@ -638,7 +638,7 @@ for n, c in enumerate(commands):
             axes[n].set_title(title)
             axes[n].set_ylabel('Intensity')
             axes[n].set_xlabel('Frequency Hz')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
         axes[n].axhline(y=0, color="black", linestyle="--")
 
         if lims != None:
