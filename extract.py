@@ -16,14 +16,11 @@ parser.add_argument('qinp', type=str,
 parser.add_argument('--adir', '-a', type=str, default='analysis',
                     help='Name or path to directory where to put the extracted data files [defaults to QINPDIR/analysis]')
 
-parser.add_argument('--steps', default='A',
+parser.add_argument('--steps', '-ns', default='A',
                     help='Number of steps to parse [defaults to all steps]')
 
 parser.add_argument('--stitch', '-s', dest='stitch',action='store_true',
                     help='Stitch the CI energies and populations')
-
-parser.add_argument('--redo', dest='redo', action='store_true',
-                    help='Ignore the extraction manifest (if it exists) [defaults to false]')
 
 parser.add_argument('--quiet', dest='quiet', action='store_true',
                     help='Silence the output [WIP]')
@@ -42,16 +39,7 @@ OUTDIR = args.adir if args.adir[0] == '/' else os.path.join(os.path.dirname(QINP
 manifest_path = os.path.join(OUTDIR, MANIFEST_NAME)
 manifest = None
 if os.path.exists(OUTDIR):
-    print('Output path exists')
-    if os.path.exists(manifest_path):
-        if args.redo:
-            print('Ignore existing manifest')
-        else:
-            print('Attempting to load existig manifest')
-            with open(manifest_path, 'r') as f:
-                manifest = json.load(f)
-    else:
-        print('No manifest has been found')
+    print('Output path exists - clashes with analysis files already there is possible!')
 else: os.makedirs(OUTDIR)
 
 # Parse the quantics input
@@ -94,11 +82,7 @@ data_gwpx = ParseLogAll.ImportLogalls(datadir, q_inp_data['ngwp'], STEPLIMS, fna
 nsteps = data_gwpx['steps']
 assert(nsteps == len(q_out_data))
 
-# Check against manifest
-if manifest != None: 
-    try: assert(nsteps == manifest['steps'])
-    except: raise Exception('Conflicting step numbers in script/manifest! Run with --redo to rebuild')
-else: manifest = {'steps' : nsteps}
+manifest = {'steps' : nsteps}
 manifest['tout']= q_inp_data['tout']
 manifest['method']= 'queh'
 
@@ -168,10 +152,14 @@ cipops = data_gwpx['adiabats'].transpose(2,1,0)[:data_gwpx['cic'].shape[2]]
 ci_energies = data_gwpx['cies'].transpose(2,1,0)   
 # print(f'CIPOPS = {cipops.shape} CIES = {ci_energies.shape}')
 if args.stitch:
-    manifest['stitched'] = True
-    ci_stitches = mathutils.Stitcher.compute(data_gwpx['cic'].transpose(0,2,1,3))
-    ci_energies = mathutils.Stitcher.run(ci_energies.transpose((2,0,1)), ci_stitches).transpose((1,2,0))
-    cipops = mathutils.Stitcher.run(cipops.transpose((2,0,1)), ci_stitches).transpose((1,2,0))
+    try:
+        ci_stitches = mathutils.Stitcher.compute(data_gwpx['cic'].transpose(0,2,1,3))
+        ci_energies = mathutils.Stitcher.run(ci_energies.transpose((2,0,1)), ci_stitches).transpose((1,2,0))
+        cipops = mathutils.Stitcher.run(cipops.transpose((2,0,1)), ci_stitches).transpose((1,2,0))
+        manifest['stitched'] = True
+    except:
+        print("Stitcher failed! Results will be unstitched")
+        manifest['stitched'] = False
 
 cipops_ave = weightscale_sq(cipops, gwp_sf, nsteps)
 # print(gwp_sf, gwp_sf.shape)
