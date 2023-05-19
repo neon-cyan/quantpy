@@ -96,23 +96,25 @@ else:
     with open(os.path.join(OUTDIR, 'cies'), 'wb') as f:
         np.save(f, [cie_energies[0].T])
     manifest['quantities'].append('cies')
-    # print(ci_composition.shape)
+
     with open(os.path.join(OUTDIR, 'cicomp'), 'wb') as f:
         np.save(f, ci_composition)
     manifest['quantities'].append('cicomp')
-
+    
     with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
         np.save(f, np.square(np.abs(adiabats[0])))
-    with open(os.path.join(OUTDIR, 'zci'), 'wb') as f:
-        np.save(f, adiabats[0])
+    with open(os.path.join(OUTDIR, 'ci'), 'wb') as f:
+        np.save(f, adiabats.transpose(0,2,1))
     manifest['quantities'].append('ci')
 
     # save CSF pop
-    diabats = np.abs(np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])).T
+    diabats = np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns]).T
     with open(os.path.join(OUTDIR, 'csf_ave'), 'wb') as f:
-        np.save(f, np.square(diabats))
-    with open(os.path.join(OUTDIR, 'zcsf'), 'wb') as f:
-        np.save(f, np.array([np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])])[0].T)
+        np.save(f, np.abs(np.square(diabats)))
+    with open(os.path.join(OUTDIR, 'csf'), 'wb') as f:
+        np.save(f, [diabats.T])
+    csfs=np.array([np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])])[0].T
+
     manifest['quantities'].append('csf')
 
     # save xyz

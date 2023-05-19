@@ -162,29 +162,22 @@ if args.stitch:
         manifest['stitched'] = False
 
 cipops_ave = weightscale_sq(cipops, gwp_sf, nsteps)
-# print(gwp_sf, gwp_sf.shape)
-# print(cipops, cipops.shape)
-zci = weightscale(cipops, gwp_sf, nsteps, do_abs=False)
-# print(zci, zci.shape)
+
 with open(os.path.join(OUTDIR, 'ci'), 'wb') as f:
     np.save(f, cipops.T)
 with open(os.path.join(OUTDIR, 'cies'), 'wb') as f:
     np.save(f, ci_energies.T)
 with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
     np.save(f, cipops_ave)
-with open(os.path.join(OUTDIR, 'zci'), 'wb') as f:
-    np.save(f, zci)    
 manifest['quantities'].append('ci')
 
 diabats = data_gwpx['diabats'].transpose(2,1,0)
 diabats_ave = weightscale_sq(diabats, gwp_sf, nsteps)
-zcsf = weightscale(diabats, gwp_sf, nsteps, do_abs=False)
+
 with open(os.path.join(OUTDIR, 'csf'), 'wb') as f:
     np.save(f, diabats.T)
 with open(os.path.join(OUTDIR, 'csf_ave'), 'wb') as f:
     np.save(f, diabats_ave)
-with open(os.path.join(OUTDIR, 'zcsf'), 'wb') as f:
-    np.save(f, zcsf)
 manifest['quantities'].append('csf')
 
 msum = data_gwpx['mullikensum'].transpose(2,1,0)

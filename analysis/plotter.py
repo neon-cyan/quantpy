@@ -322,16 +322,22 @@ for n, c in enumerate(commands):
         axes[n].set_title('Diabatic [CSF] state evolution'+title)
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='lower left')
+        axes[n].legend(loc='best')
 
     elif cmd in ['sumcsfv','csfv']:
         # expect input of form label:0,0,1+1,0,0_label:1,1,1
-        diabats = np.load(os.path.join(basepath, 'zcsf'))
+        diabats = np.load(os.path.join(basepath, 'csf'))
         title = ''
+        quehmode=False
         if cmdptx != None:
             if len(cmdptx) > 1: raise Exception("Only one GWP allowed for CSF/SD Vector plots!")
-            diabats = np.load(os.path.join(basepath, 'csf'))[cmdptx[0]].T
+            diabats = diabats[cmdptx[0]].T
             title = title + f' (for GWP {cmdptx[0]+1})'
+        elif manifest['method'] == 'l118': # L118 -> Just load the first
+            diabats = diabats[0].T
+        else:
+            quehmode = True
+
         # print(diabats.shape)
         # Expect a list of label:1,1,0,0_label:0,0,1,1
         to_plot={}
@@ -344,39 +350,20 @@ for n, c in enumerate(commands):
                 vect = vect / np.linalg.norm(vect)
                 # print(label, vect)
                 to_plot[label].append(vect)
+
         for k, v in to_plot.items():
-            sarr = np.array([np.square(np.abs(diabats.T.dot(j))) for j in v])
-            # print(sarr.T.shape)
-            # print(sorted(sarr.T[0]))
-            data = np.sum(sarr, 0)
+            if quehmode:
+                data = np.zeros_like(times)
+                weights = np.load(os.path.join(basepath, 'weights'))
+                for gwpidx in range(diabats.shape[0]):
+                    sarr =  np.array([np.square(np.abs(diabats[gwpidx].dot(j))) for j in v])
+                    data += np.multiply(np.sum(sarr, 0), (weights.T[gwpidx]))
+            else:
+                sarr = np.array([np.square(np.abs(diabats.T.dot(j))) for j in v])
+                data = np.sum(sarr, 0)
             axes[n].plot(times, data, label=k)
         axes[n].set_title('CSF/SD state vector ' + ('sum ' if cmd=='sumcsfv'else '')+'evolution'+title)
         axes[n].set_ylabel('State population')
-        axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='best')
-
-    elif cmd == 'csfvreim':
-        diabats = np.load(os.path.join(basepath, 'zcsf'))
-        title = ''
-        if cmdptx != None:
-            if len(cmdptx) > 1: raise Exception("Only one GWP allowed for CSF/SD ReIm plots!")
-            diabats = np.load(os.path.join(basepath, 'csf'))[cmdptx[0]].T
-            title = title + f' (for GWP {cmdptx[0]+1})'
-        # print(diabats.shape)
-        # Expect inp of form label:1,1,0,0
-        label, nums = ins.split(':')
-        nums = [float(j) for j in nums.split(',')]
-        # assert(len(nums)==diabats.shape[1])
-        vect = np.array(nums)
-        to_plot[label] = vect / np.linalg.norm(vect)
-            # Normalize the vector
-        reals = np.real(diabats.T.dot(v))
-        imgs = np.imag(diabats.T.dot(v))
-        axes[n].plot(times, reals, label='Re')
-        axes[n].plot(times, imgs, label='Im')
-
-        axes[n].set_title(f'{label} state vector component evolution'+title)
-        axes[n].set_ylabel('Coefficent')
         axes[n].set_xlabel('Time (fs)')
         axes[n].legend(loc='best')
 
