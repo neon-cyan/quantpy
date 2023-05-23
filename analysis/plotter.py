@@ -37,7 +37,6 @@ if len(sys.argv) < 5:
     => CSFv=[label:1,1,0,0_label:0,0,1,1]           - At least one label and real vector of length CSF (Auto-rescaled) <*>
     => SUMSCFV=[label:1,0,0+0,1,0_label:0,0,1]      - At least one label and real vectors of length CSF (Each is auto-rescaled) <*>
     => AVCSF=[A|1,2,3:av_window]                    - Comma seperated list of at least one CSF/SD number or A for all and average window size <*>
-    => CSFvReIm=[label:1,1,0,0]                     - Real + Imaginary parts for a label and CSF vector <*>
 
     ** SPIN DENSITY AND MULLIKEN CHARGE (+ HEAT MAPS) **
     => SD=[A|1,2]                                   - At least one atom number or A for all
@@ -57,8 +56,8 @@ if len(sys.argv) < 5:
     Commands marked with <*> support some level of per-GWP functionality
     This is invoked using the at operator @ e.g. BL@1=1-2,2-3
     A few special GWP-only commands are included
-    => maxf@GWP=                                   - Max force (in AU) - takes no ordinary parameters
-    => casde@GWP=                                  - CASSCF convergence for GWPs - takes no ordinary parameters
+    => maxf@GWP                                    - Max force (in AU) - takes no ordinary parameters
+    => casde@GWP                                   - CASSCF convergence for GWPs - takes no ordinary parameters
     => fnm@GWP=[1,2,3]                             - Forces expressed in normal mode coordinates
     => tdpes@GWP=[1,2,3]                           - CI State energies (in AU) as a function of time
     """)
@@ -81,7 +80,9 @@ fig, axes = plt.subplots(1, len(commands), num=manifest_path, figsize=(wpp * len
 if len(commands) == 1 : axes = [axes] # MPL messes with array if only one plot => Need to re-array
 
 for n, c in enumerate(commands):
-    cmd, ins = c.split('=')
+    if '=' in c:
+        cmd, ins = c.split('=')
+    else: cmd = c
 
     cmdptx = None
     if '@' in cmd:
