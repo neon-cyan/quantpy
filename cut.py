@@ -25,12 +25,15 @@ os.makedirs(outputdir, exist_ok=True)
 for f in os.listdir(basepath):
     if '.' in f: continue # Ignore files with extensions
     data = np.load(os.path.join(basepath, f))
-    dimx = data.shape.index(manifest['steps'])
-    transposevector = [dimx] + [i if i!=dimx else 0 for i in range(1,len(data.shape))]
-    tr = data.transpose(*transposevector)
-    assert(tr.shape[0] == manifest['steps'])
-    tr = tr[:cutoff]
-    data = tr.transpose(*transposevector)
+    try:
+        dimx = data.shape.index(manifest['steps'])
+        transposevector = [dimx] + [i if i!=dimx else 0 for i in range(1,len(data.shape))]
+        tr = data.transpose(*transposevector)
+        assert(tr.shape[0] == manifest['steps'])
+        tr = tr[:cutoff]
+        data = tr.transpose(*transposevector)
+    except:
+        print(f'{f} is uncutable! Saving as is')
     with open(os.path.join(outputdir, f), 'wb') as fx:
         np.save(fx, data)
 # Fix up and write manifest

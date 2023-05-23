@@ -3,6 +3,8 @@ import numpy as np
 import sys
 import os
 import json
+from defs import ATOMICLABELS, get_nth_col
+import matplotlib.pyplot as plt
 
 if len(sys.argv) < 5:
     print(f"""
@@ -12,29 +14,29 @@ if len(sys.argv) < 5:
     Where graphs can be a space seperated list of any of
 
     ** BOND LENGTHS **
-    => BL=[A]-[B],[C]-[D]                           - At least one dash seperated atom number pair
-    => PBL=[A]-[B],[C]-[D]                          - At least one dash seperated atom number pair
+    => BL=[1]-[2],[3]-[4]                           - At least one dash seperated atom number pair <*>
+    => PBL=[1]-[2],[3]-[4]                          - At least one dash seperated atom number pair <*>
 
     ** BOND ANGLES **
-    => BA=[A]-[B]-[C],[A]-[B]-[D]                   - At least one dash seperated atom number trio
-    => PBA=[A]-[B]-[C],[A]-[B]-[D]                  - At least one dash seperated atom number trio
+    => BA=[1]-[2]-[3],[2]-[3]-[4]                   - At least one dash seperated atom number trio
+    => PBA=[1]-[2]-[3],[2]-[3]-[4]                  - At least one dash seperated atom number trio
 
     ** DIHEDRAL ANGLE **
     => DA=[A]-[B]-[C]-[D],[A]-[B]-[C]-[E]           - At least one dash seperated atom number quartet
 
     ** VIBRATIONAL NORMAL MODE **
-    => NM=[A],[B],[C]                               - Comma seperated list of at least one NM
+    => NM=[A],[B],[C]                               - Comma seperated list of at least one NM <*>
 
     ** CI POPULATION **
-    => CIs=[A|1,2,3]                                - Comma seperated list of at least one CI number or A for all
+    => CIs=[A|1,2,3]                                - Comma seperated list of at least one CI number or A for all <*>
 
     ** CSF/SD POPULATION **
-    => CSFs=[A|1,2,3]                               - Comma seperated list of at least one CSF/SD number or A for all
-    => CSFv=[label:1,1,0,0_label:0,0,1,1]           - At least one label and real vector of length CSF (Auto-rescaled)
-    => UCSFv=[label:1,1,0,0_label:0,0,1,1]          - At least one label and real vector of length CSF (Non-rescaled)
-    => SUMSCFV=[label:1,0,0+0,1,0_label:0,0,1]      - At least one label and real vectors of length CSF (Auto-rescaled)
-    => AVCSFs=[A|1,2,3:av_window]                   - Comma seperated list of at least one CSF/SD number or A for all and average window size
-    => CSFvReIm=[label:1,1,0,0]                     - Real + Imaginary parts for a label and CSF vector
+    => CSFs=[A|1,2,3]                               - Comma seperated list of at least one CSF/SD number or A for all <*>
+
+    ** MODIFIED CSF/SD POPULATION **
+    => CSFv=[label:1,1,0,0_label:0,0,1,1]           - At least one label and real vector of length CSF (Auto-rescaled) <*>
+    => SUMSCFV=[label:1,0,0+0,1,0_label:0,0,1]      - At least one label and real vectors of length CSF (Each is auto-rescaled) <*>
+    => AVCSF=[A|1,2,3:av_window]                    - Comma seperated list of at least one CSF/SD number or A for all and average window size <*>
 
     ** SPIN DENSITY AND MULLIKEN CHARGE (+ HEAT MAPS) **
     => SD=[A|1,2]                                   - At least one atom number or A for all
@@ -50,16 +52,16 @@ if len(sys.argv) < 5:
     ===> The CHOP will discard first CHOP FFT datapoints (close to zero freq)
     ===> The selector refers to either atoms or CSFs comma seperated list or A for all
     ===> Range is either None or given as min,max (auto * 1E15)
+
+    Commands marked with <*> support some level of per-GWP functionality
+    This is invoked using the at operator @ e.g. BL@1=1-2,2-3
+    A few special GWP-only commands are included
+    => maxf@GWP                                    - Max force (in AU) - takes no ordinary parameters
+    => casde@GWP                                   - CASSCF convergence for GWPs - takes no ordinary parameters
+    => fnm@GWP=[1,2,3]                             - Forces expressed in normal mode coordinates
+    => tdpes@GWP=[1,2,3]                           - CI State energies (in AU) as a function of time
     """)
     sys.exit(0)
-
-ATOMICLABELS = ['H',  'He',  'Li',  'Be',  'B',  'C',  'N',  'O',  'F',  'Ne',  'Na',  'Mg',  'Al',  'Si',  'P',  'S', 
-    'Cl',  'Ar',  'K',  'Ca',  'Sc',  'Ti',  'V',  'Cr',  'Mn',  'Fe',  'Co',  'Ni',  'Cu',  'Zn',  'Ga',  'Ge',  'As',  'Se',  
-    'Br',  'Kr',  'Rb',  'Sr',  'Y',  'Zr',  'Nb',  'Mo',  'Tc',  'Ru',  'Rh',  'Pd',  'Ag',  'Cd',  'In',  'Sn',  'Sb',  'Te', 
-    'I',  'Xe',  'Cs',  'Ba',  'La',  'Ce',  'Pr',  'Nd',  'Pm',  'Sm',  'Eu',  'Gd',  'Tb',  'Dy',  'Ho',  'Er',  'Tm',  'Yb', 
-    'Lu',  'Hf',  'Ta',  'W',  'Re',  'Os',  'Ir',  'Pt',  'Au',  'Hg',  'Tl',  'Pb',  'Bi',  'Po',  'At',  'Rn',  'Fr',  'Ra', 
-    'Ac',  'Th',  'Pa',  'U',  'Np',  'Pu',  'Am',  'Cm',  'Bk',  'Cf',  'Es',  'Fm',  'Md',  'No',  'Lr',  'Rf',  'Db',  'Sg', 
-    'Bh',  'Hs',  'Mt',  'Ds',  'Rg',  'Cn',  'Nh',  'Fl',  'Mc',  'Lv',  'Ts',  'Og'] # Yes *all* of the elements
 
 manifest_path = sys.argv[1]
 commands = sys.argv[2:-2]
@@ -74,49 +76,91 @@ basepath = os.path.dirname(manifest_path)
 times = np.load(os.path.join(basepath, 'times'))
 nsteps = manifest['steps']
 
-
-# DO PLOTTING
-
-import matplotlib.pyplot as plt
-
-# Define custom default colours - keep consistent between plots
-# List lossely based on https://sashamaps.net/docs/resources/20-colors/
-# Do this for the CSFs/CIs/FFT/NMs/MQ/SD
-def get_nth_col(idx):
-    cols =['#e6194B', '#3cb44b', '#FFC800', '#4363d8', '#f58231', '#42d4f4', '#f032e6', '#fabed4', '#469990', '#dcbeff', '#9A6324', '#800000', '#aaffc3', '#000075', '#a9a9a9']
-    return cols[idx%len(cols)]
-
 fig, axes = plt.subplots(1, len(commands), num=manifest_path, figsize=(wpp * len(commands), height))
 if len(commands) == 1 : axes = [axes] # MPL messes with array if only one plot => Need to re-array
 
 for n, c in enumerate(commands):
-    cmd, ins = c.split('=')
+    if '=' in c:
+        cmd, ins = c.split('=')
+    else: cmd = c
+
+    cmdptx = None
+    if '@' in cmd:
+        cmd, cmdptx = cmd.split('@') # Deal with GWPs ('extra context')
+        cmdptx = [int(i)-1 for i in cmdptx.split(',')]
     cmd=cmd.lower()
-    # GEOMETRICS
-    if cmd == 'bl':
-        avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
-        BPS = []
-        for x in ins.split(','):
-            a, b = [int(z) for z in x.split('-')]
-            BPS.append([a,b])
-        for a in BPS:
-            dp = []
-            for x in range(nsteps):
-                dp.append(mathutils.MathUtils.bond_length(avegeom[x, a[0]-1],avegeom[x, a[1]-1] ))
 
-            try: alab1 = ATOMICLABELS[manifest['atomnos'][str(a[0])]-1]
-            except: alab1 = '?'
-            try: alab2 = ATOMICLABELS[manifest['atomnos'][str(a[1])]-1]
-            except: alab2 = '?'
-
-            axes[n].plot(times, dp, label=f'{alab1}[{a[0]}] - {alab2}[{a[1]}]')
-        axes[n].set_title('Bond lengths')
-        axes[n].set_ylabel('Bond length (Å)')
+    # GENERAL GWP STUFF
+    if cmd in ['maxf', 'mf']:
+        assert(len(cmdptx) >= 1)
+        forces = np.load(os.path.join(basepath, 'maxf'))
+        # print(forces.shape)
+        for gwp in cmdptx:
+            data = forces[gwp]
+            axes[n].plot(times, data, label=f'GWP{gwp+1}')
+        axes[n].set_title('Max forces (per GWP)')
+        axes[n].set_ylabel('Max force (au)')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
-    elif cmd == 'pbl':
+    elif cmd in ['casde', 'cascon']:
+        assert('casde' in manifest['quantities'])
+        assert(len(cmdptx) > 1)
+        raw_data = np.load(os.path.join(basepath, 'casde'))
+        for i in cmdptx:
+            axes[n].plot(times, raw_data[i], label=f'GWP{i+1}')
+        axes[n].set_title('CASSCF convergence (per GWP)')
+        axes[n].set_ylabel('Convergence')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='best')
+
+    elif cmd=='fnm':
+        assert('nm' in manifest['quantities'])
+        assert('forces' in manifest['quantities'])
+        xyz2nm = np.load(os.path.join(basepath, 'xyz2nm'))
+        if cmdptx != None:
+            if len(cmdptx) > 1: raise Exception("Only one GWP allowed for FNM plots!")
+            else: raw_data = np.load(os.path.join(basepath, 'forces'))[cmdptx[0]]
+        else:
+            raise Excpetion("FNM Requires a GWP!")
+        nms = [int(i)-1 for i in ins.split(',')]
+        # print(nms)
+        for a in nms:
+            dp = []
+            xyz_nma = xyz2nm[a]
+            for b in range(raw_data.shape[0]):
+                dp.append(xyz_nma.dot(raw_data[b].reshape(xyz_nma.shape)))
+            axes[n].plot(times, dp, label=f'NM{a+1}', color=get_nth_col(a))
+        axes[n].set_title(f'Gradient in normal modes (for GWP{cmdptx[0]+1})')
+        axes[n].set_ylabel('Gradient as normal mode')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='best')
+
+    elif cmd=='tdpes':
+        assert('ci' in manifest['quantities'])
+        # Read in correct GWP's CIE
+        if cmdptx != None:
+            if len(cmdptx) > 1: raise Exception("Only one GWP allowed for plotpes plots!")
+            else: raw_data = np.load(os.path.join(basepath, 'cies'))[cmdptx[0]].T
+        else:
+            raise Excpetion("PlotPES Requires a GWP!")
+        cis = [int(i)-1 for i in ins.split(',')]
+        for i in cis:
+            axes[n].plot(times, raw_data[i], label=f'CI{i+1}', color=get_nth_col(i))
+        axes[n].set_title(f'TD-PES (for GWP{cmdptx[0]+1})')
+        axes[n].set_ylabel('Energy / Ha')
+        axes[n].set_xlabel('Time (fs)')
+        axes[n].legend(loc='best')
+
+    # GEOMETRICS
+    elif cmd in ['bl', 'pbl']:
         avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
+        # Code to deal with GWPs
+        title = ''
+        if cmdptx != None:
+            if len(cmdptx) > 1: raise Exception("Only one GWP allowed for [P]BL plots!")
+            else: avegeom = np.load(os.path.join(basepath, 'xyz'))[cmdptx[0]]
+            title = title + f' (for GWP {cmdptx[0]+1})'
         BPS = []
         for x in ins.split(','):
             a, b = [int(z) for z in x.split('-')]
@@ -126,7 +170,7 @@ for n, c in enumerate(commands):
             init_bl = mathutils.MathUtils.bond_length(avegeom[0, a[0]-1],avegeom[0, a[1]-1] )
             for x in range(nsteps):
                 bl = mathutils.MathUtils.bond_length(avegeom[x, a[0]-1],avegeom[x, a[1]-1] )
-                dp.append((bl - init_bl) / init_bl)
+                dp.append((bl - init_bl) / init_bl if cmd=='pbl' else bl)
 
             try: alab1 = ATOMICLABELS[manifest['atomnos'][str(a[0])]-1]
             except: alab1 = '?'
@@ -134,20 +178,32 @@ for n, c in enumerate(commands):
             except: alab2 = '?'
 
             axes[n].plot(times, dp, label=f'{alab1}[{a[0]}] - {alab2}[{a[1]}]')
-        axes[n].set_title('Bond lengths (fractional)')
-        axes[n].set_ylabel('Fractional change')
+        
+        if cmd=='pbl':
+            title = 'Bond lengths (fractional)' + title
+            axes[n].set_ylabel('Fractional change')
+        else:
+            title = 'Bond lengths' + title
+            axes[n].set_ylabel('Bond length (Å)')
+        axes[n].set_title(title)
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
-
+        axes[n].legend(loc='best')
 
     elif cmd == 'nm':
         nms = np.load(os.path.join(basepath, 'nm_ave'))
+        # Code to deal with GWPs
+        title = ''
+        if cmdptx != None:
+            if len(cmdptx) > 1: raise Exception("Only one GWP allowed for NM plots!")
+            else: nms = np.load(os.path.join(basepath, 'nm'))[cmdptx[0]].T
+            title = title + f' (for GWP {cmdptx[0]+1})'
+
         for x in [int(i) for i in ins.split(',')]:
             axes[n].plot(times, nms[x-1], label=f'NM{x}', color=get_nth_col(x-1))
-        axes[n].set_title('Normal mode evolution')
+        axes[n].set_title('Normal mode evolution'+title)
         axes[n].set_ylabel('Normal mode excitation')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'ba':
         avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
@@ -172,7 +228,7 @@ for n, c in enumerate(commands):
         axes[n].set_ylabel('Bond angle (deg)')
         axes[n].set_title('Bond angle')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'pba':
         avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
@@ -199,7 +255,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Bond angles (fractional)')
         axes[n].set_ylabel('Fractional change')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'da':
         avegeom = np.load(os.path.join(basepath, 'xyz_ave'))
@@ -227,63 +283,62 @@ for n, c in enumerate(commands):
         axes[n].set_ylabel('Dihedral angle (rad)')
         axes[n].set_title('Bond angle')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
         
     # ELECTRONICS
     elif cmd == 'ci' or cmd == 'cis':
         adiabats = np.load(os.path.join(basepath, 'ci_ave'))
+        title = ''
+        if cmdptx != None:
+            if len(cmdptx) > 1: raise Exception("Only one GWP allowed for CI plots!")
+            adiabats = np.load(os.path.join(basepath, 'ci'))[cmdptx[0]].T
+            adiabats=np.square(np.abs(adiabats))
+            title = title + f' (for GWP {cmdptx[0]+1})'
+
         CI_STATES = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(adiabats.shape[0]):
             if CI_STATES == None: pass
             else:
                 if i+1 not in CI_STATES: continue
             axes[n].plot(times, adiabats[i], label=f'CI {i+1}', color=get_nth_col(i))
-        axes[n].set_title('Adiabatic [CI] state evolution')
+        axes[n].set_title('Adiabatic [CI] state evolution'+title)
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
-    elif cmd == 'csf' or cmd == 'csfs':
+    elif cmd in ['csfs','csf','sdet','sdets']:
         diabats = np.load(os.path.join(basepath, 'csf_ave'))
+        title = ''
+        if cmdptx != None:
+            if len(cmdptx) > 1: raise Exception("Only one GWP allowed for CSF/SD plots!")
+            diabats = np.load(os.path.join(basepath, 'csf'))[cmdptx[0]].T
+            diabats=np.square(np.abs(diabats))
+            title = title + f' (for GWP {cmdptx[0]+1})'
         CSF_STATES = None if ins=='A' else [int(i) for i in ins.split(',')]
         for i in range(diabats.shape[0]):
             if CSF_STATES == None: pass
             else:
                 if i+1 not in CSF_STATES: continue
             axes[n].plot(times, diabats[i], label=f'CSF {i+1}', color=get_nth_col(i))
-        axes[n].set_title('Diabatic [CSF] state evolution')
+        axes[n].set_title('Diabatic [CSF] state evolution'+title)
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
-    elif cmd == 'csfv' or cmd=='ucsfv':
-        diabats = np.load(os.path.join(basepath, 'zcsf'))
-        # print(diabats.shape)
-        # Expect a list of label:1,1,0,0_label:0,0,1,1
-        to_plot={}
-        for i in ins.split('_'):
-            label, nums = i.split(':')
-            nums = [float(j) for j in nums.split(',')]
-            # assert(len(nums)==diabats.shape[1])
-            vect = np.array(nums)
-            if cmd=='csfv': # Rescale if needed
-                vect = vect / np.linalg.norm(vect)
-            else:
-                print(f'About to plot an unscaled vector! Norm={np.linalg.norm(vect)}')
-            to_plot[label] = vect
-            # Normalize the vector
-        for k, v in to_plot.items():
-            data = np.abs(diabats.T.dot(v))**2
-            axes[n].plot(times, data, label=k)
-
-        axes[n].set_title('Diabatic [CSF] state vector evolution')
-        axes[n].set_ylabel('State population')
-        axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
-
-    elif cmd == 'sumcsfv':
+    elif cmd in ['sumcsfv','csfv']:
         # expect input of form label:0,0,1+1,0,0_label:1,1,1
-        diabats = np.load(os.path.join(basepath, 'zcsf'))
+        diabats = np.load(os.path.join(basepath, 'csf'))
+        title = ''
+        quehmode=False
+        if cmdptx != None:
+            if len(cmdptx) > 1: raise Exception("Only one GWP allowed for CSF/SD Vector plots!")
+            diabats = diabats[cmdptx[0]].T
+            title = title + f' (for GWP {cmdptx[0]+1})'
+        elif manifest['method'] == 'l118': # L118 -> Just load the first
+            diabats = diabats[0].T
+        else:
+            quehmode = True
+
         # print(diabats.shape)
         # Expect a list of label:1,1,0,0_label:0,0,1,1
         to_plot={}
@@ -296,39 +351,31 @@ for n, c in enumerate(commands):
                 vect = vect / np.linalg.norm(vect)
                 # print(label, vect)
                 to_plot[label].append(vect)
+
         for k, v in to_plot.items():
-            sarr = np.array([np.abs(diabats.T.dot(j))**2 for j in v])
-            # print(sarr.T.shape)
-            # print(sorted(sarr.T[0]))
-            data = np.sum(sarr, 0)
+            if quehmode:
+                data = np.zeros_like(times)
+                weights = np.load(os.path.join(basepath, 'weights'))
+                for gwpidx in range(diabats.shape[0]):
+                    sarr =  np.array([np.square(np.abs(diabats[gwpidx].dot(j))) for j in v])
+                    data += np.multiply(np.sum(sarr, 0), (weights.T[gwpidx]))
+            else:
+                sarr = np.array([np.square(np.abs(diabats.T.dot(j))) for j in v])
+                data = np.sum(sarr, 0)
             axes[n].plot(times, data, label=k)
-        axes[n].set_title('Diabatic [CSF] state vector sum evolution')
+        axes[n].set_title('CSF/SD state vector ' + ('sum ' if cmd=='sumcsfv'else '')+'evolution'+title)
         axes[n].set_ylabel('State population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
-
-    elif cmd == 'csfvreim':
-        diabats = np.load(os.path.join(basepath, 'zcsf'))
-        # print(diabats.shape)
-        # Expect inp of form label:1,1,0,0
-        label, nums = ins.split(':')
-        nums = [float(j) for j in nums.split(',')]
-        # assert(len(nums)==diabats.shape[1])
-        vect = np.array(nums)
-        to_plot[label] = vect / np.linalg.norm(vect)
-            # Normalize the vector
-        reals = np.real(diabats.T.dot(v))
-        imgs = np.imag(diabats.T.dot(v))
-        axes[n].plot(times, reals, label='Re')
-        axes[n].plot(times, imgs, label='Im')
-
-        axes[n].set_title(f'{label} state vector component evolution')
-        axes[n].set_ylabel('Coefficent')
-        axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'avcsf':
         diabats = np.load(os.path.join(basepath, 'csf_ave'))
+        title = ''
+        if cmdptx != None:
+            if len(cmdptx) > 1: raise Exception("Only one GWP allowed for CSF/SD ReIm plots!")
+            diabats = np.load(os.path.join(basepath, 'csf'))[cmdptx[0]].T
+            diabats=np.square(np.abs(diabats))
+            title = title + f' (for GWP {cmdptx[0]+1})'
         csfs, av_window = ins.split(':')
         av_window = int(av_window)
         CSF_STATES = None if csfs=='A' else [int(i) for i in csfs.split(',')]
@@ -338,10 +385,10 @@ for n, c in enumerate(commands):
                 if i+1 not in CSF_STATES: continue
             mav = mathutils.MathUtils.moving_avg(diabats[i], av_window)
             axes[n].plot(times[:len(mav)], mav, label=f'AVCSF {i+1}', color=get_nth_col(i))
-        axes[n].set_title(f'{av_window} point moving average diabatic [CSF] state evolution')
+        axes[n].set_title(f'{av_window} point moving average CSF state evolution'+title)
         axes[n].set_ylabel('Averaged state population')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'sd':
         sd = np.load(os.path.join(basepath, 'sd_ave'))
@@ -357,7 +404,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Spin density evolution (H Summed)')
         axes[n].set_ylabel('Spin density')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'sdla':
         sd = np.load(os.path.join(basepath, 'sdla_ave'))
@@ -373,9 +420,10 @@ for n, c in enumerate(commands):
         axes[n].set_title('Spin density')
         axes[n].set_ylabel('Spin density')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'avsd':
+        sd = np.load(os.path.join(basepath, 'sd_ave'))
         csfs, av_window = ins.split(':')
         av_window = int(av_window)
         SDS = None if csfs=='A' else [int(i) for i in csfs.split(',')]
@@ -391,7 +439,7 @@ for n, c in enumerate(commands):
         axes[n].set_title(f'{av_window}-point moving average spin density (H Summed)')
         axes[n].set_ylabel('Spin density')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
 
     elif cmd == 'mq':
         mq = np.load(os.path.join(basepath, 'mq_ave'))
@@ -407,7 +455,7 @@ for n, c in enumerate(commands):
         axes[n].set_title('Mulliken charge evolution (H Summed)')
         axes[n].set_ylabel('Mulliken charge')
         axes[n].set_xlabel('Time (fs)')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
         
     # Heatmaps - currently SD/MQ (may want to add BL)
     elif cmd == 'hm':
@@ -578,7 +626,7 @@ for n, c in enumerate(commands):
             axes[n].set_title(title)
             axes[n].set_ylabel('Intensity')
             axes[n].set_xlabel('Frequency Hz')
-        axes[n].legend(loc='upper right')
+        axes[n].legend(loc='best')
         axes[n].axhline(y=0, color="black", linestyle="--")
 
         if lims != None:

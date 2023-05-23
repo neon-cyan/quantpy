@@ -1,6 +1,6 @@
 from glogpy.l118_traj_job import l118_job
 from glogpy.freqency_job import frequency_job
-from mathutils import Stitcher
+from mathutils import Stitcher, MathUtils
 import argparse
 import sys, os
 import mathutils
@@ -96,23 +96,25 @@ else:
     with open(os.path.join(OUTDIR, 'cies'), 'wb') as f:
         np.save(f, [cie_energies[0].T])
     manifest['quantities'].append('cies')
-    # print(ci_composition.shape)
+
     with open(os.path.join(OUTDIR, 'cicomp'), 'wb') as f:
         np.save(f, ci_composition)
     manifest['quantities'].append('cicomp')
-
+    
     with open(os.path.join(OUTDIR, 'ci_ave'), 'wb') as f:
         np.save(f, np.square(np.abs(adiabats[0])))
-    with open(os.path.join(OUTDIR, 'zci'), 'wb') as f:
-        np.save(f, adiabats[0])
+    with open(os.path.join(OUTDIR, 'ci'), 'wb') as f:
+        np.save(f, adiabats.transpose(0,2,1))
     manifest['quantities'].append('ci')
 
     # save CSF pop
-    diabats = np.abs(np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])).T
+    diabats = np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns]).T
     with open(os.path.join(OUTDIR, 'csf_ave'), 'wb') as f:
-        np.save(f, np.square(diabats))
-    with open(os.path.join(OUTDIR, 'zcsf'), 'wb') as f:
-        np.save(f, np.array([np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])])[0].T)
+        np.save(f, np.abs(np.square(diabats)))
+    with open(os.path.join(OUTDIR, 'csf'), 'wb') as f:
+        np.save(f, [diabats.T])
+    csfs=np.array([np.array([mathutils.MathUtils.dict_to_list(i[0]['diabats']) for i in xns])])[0].T
+
     manifest['quantities'].append('csf')
 
     # save xyz
@@ -137,6 +139,13 @@ else:
             np.save(f, [[i[3]['maxforce'] for i in xns]])
         manifest['quantities'].append('maxf')
 
+    if 'forces' in xns[0][3]:
+        forcearr = np.array([[MathUtils.dict_to_list(i[3]['forces']) for i in xns]])
+        # print(forcearr.shape)
+        with open(os.path.join(OUTDIR, 'forces'), 'wb') as f:
+            np.save(f, forcearr)
+        manifest['quantities'].append('forces')
+
     if args.freq != None:
         nm2xyz, xyz2nm = mathutils.NormModeUtils.nm_matrix(freq_data['atommasses'], freq_data['vibfreqs'], freq_data['vibdisps'])
         geom_init = mathutils.MathUtils.dict_to_list(freq_data['geom'])
@@ -147,6 +156,11 @@ else:
         with open(os.path.join(OUTDIR, 'nm_ave'), 'wb') as f:
             np.save(f, nmdata[0].T)
         manifest['quantities'].append('nm')
+        with open(os.path.join(OUTDIR, 'nm2xyz'), 'wb') as f:
+            np.save(f, nm2xyz)
+        with open(os.path.join(OUTDIR, 'xyz2nm'), 'wb') as f:
+            np.save(f, xyz2nm)
+
 
     if 'mulliken_sum' in xns[0][2]:
         manifest['mqmap'] = list(xns[0][2]['mulliken_sum'].keys())
