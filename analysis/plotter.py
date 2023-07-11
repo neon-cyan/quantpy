@@ -105,7 +105,7 @@ for n, c in enumerate(commands):
 
     elif cmd in ['casde', 'cascon']:
         assert('casde' in manifest['quantities'])
-        assert(len(cmdptx) > 1)
+        assert(len(cmdptx) >= 1)
         raw_data = np.load(os.path.join(basepath, 'casde'))
         for i in cmdptx:
             axes[n].plot(times, raw_data[i], label=f'GWP{i+1}')
