@@ -53,6 +53,9 @@ class l118_job(gaussian_jobio):
         # Need a special case for L118 IOP(5) => Initial momenta NM specified
         # L118 provides 2 steps in first call otherwise...
         double_118 = False if 5 in l118s[0].iops else True
+        # Extra case if L118 pulse logic is used
+        if 9 in l118s[0].iops:
+            if l118s[0].iops[9] in [10,11] : double_118 = False
 
         if print_info: 
             print(f'Found {len(l118s)} x L118. Will discard the first step with integration info ...')
@@ -82,6 +85,7 @@ class l118_job(gaussian_jobio):
 
         printmod = int(np.ceil(tot/10))
         xn = []
+        print(double_118)
         for n in range(tot):
             if print_info and (n+1)%printmod == 0: print(f'=> Parsing {n+1}/{tot}')
             
